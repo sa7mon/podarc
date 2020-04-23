@@ -1,7 +1,7 @@
 package providers
 
 import (
-	"podarc/interfaces"
+	"github.com/sa7mon/podarc/internal/interfaces"
 )
 
 /*************************

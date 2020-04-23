@@ -4,12 +4,11 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"github.com/sa7mon/podarc/internal/interfaces"
+	"github.com/sa7mon/podarc/internal/providers"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"podarc/interfaces"
-	"podarc/providers"
-	"podarc/utils"
 	"regexp"
 	"time"
 )
@@ -30,16 +29,16 @@ func main() {
 		log.Println(episode.GetUrl())
 	}
 
-	fmt.Println("Download Started")
-	fmt.Println(fetchedPodcast.GetEpisodes()[0].GetImageUrl())
-
-	fileUrl := fetchedPodcast.GetEpisodes()[0].GetUrl()
-	err := utils.DownloadFile("podcast.mp3", fileUrl)
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println("Download Finished")
+	//fmt.Println("Download Started")
+	//fmt.Println(fetchedPodcast.GetEpisodes()[0].GetImageUrl())
+	//
+	//fileUrl := fetchedPodcast.GetEpisodes()[0].GetUrl()
+	//err := utils.DownloadFile("podcast.mp3", fileUrl)
+	//if err != nil {
+	//	panic(err)
+	//}
+	//
+	//fmt.Println("Download Finished")
 }
 
 func fetchPodcastFromUrl(feedUrl string, creds credentials) interfaces.Podcast {
