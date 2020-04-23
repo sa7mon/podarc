@@ -16,7 +16,7 @@ type StitcherPodcast struct {
 	Episodes        []StitcherEpisode `xml:"episodes>episode"`
 }
 
-type StitcherFeed struct {
+type StitcherFeed struct { 		  // TODO: Possibly move these properties to StitcherPodcast and delete this struct
 	Name          string          `xml:"name"`
 	Description   string          `xml:"description"`
 	LatestEpisode StitcherEpisode `xml:"episode"`
@@ -41,7 +41,7 @@ type StitcherEpisode struct {
 
 
 func (s StitcherPodcast) NumEpisodes() int {
-	panic("implement me")
+	return s.Feed.EpisodeCount
 }
 
 func (s StitcherPodcast) GetEpisodes() []interfaces.PodcastEpisode {
@@ -49,33 +49,33 @@ func (s StitcherPodcast) GetEpisodes() []interfaces.PodcastEpisode {
 }
 
 func (s StitcherPodcast) GetTitle() string {
-	panic("implement me")
+	return s.Feed.Name
 }
 
 func (s StitcherPodcast) GetDescription() string {
-	panic("implement me")
+	return s.ShowDescription
 }
 
 func (s StitcherPodcast) GetPublisher() string {
-	panic("implement me")
+	return "Stitcher"
 }
 
 func (s StitcherEpisode) GetTitle() string {
-	panic("implement me")
+	return s.Title
 }
 
 func (s StitcherEpisode) GetDescription() string {
-	panic("implement me")
+	return s.Description
 }
 
 func (s StitcherEpisode) GetUrl() string {
-	panic("implement me")
+	return s.Url
 }
 
 func (s StitcherEpisode) GetPublishedDate() string {
-	panic("implement me")
+	return s.Published
 }
 
 func (s StitcherEpisode) GetImageUrl() string {
-	panic("implement me")
+	return s.Image
 }

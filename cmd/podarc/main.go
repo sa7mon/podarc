@@ -21,7 +21,8 @@ func main() {
 	creds := readCredentials("../../creds.json")
 	creds = creds
 
-	feedUrl := "http://mates.nerdistind.libsynpro.com/rss"
+	//feedUrl := "http://mates.nerdistind.libsynpro.com/rss"
+	feedUrl := "https://app.stitcher.com/browse/feed/467097/details"
 	fetchedPodcast := fetchPodcastFromUrl(feedUrl, creds)
 
 	for _, episode := range fetchedPodcast.GetEpisodes() {
@@ -43,7 +44,10 @@ func fetchPodcastFromUrl(feedUrl string, creds credentials) interfaces.Podcast {
 		return officeLadies
 	} else if libSynMatches {
 		fmt.Println("Libsyn Pro feed detected")
+	} else {
+
 	}
+	panic("Unknown URL!")
 }
 
 func readCredentials(file string) credentials {
