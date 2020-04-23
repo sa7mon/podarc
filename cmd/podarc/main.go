@@ -2,14 +2,14 @@ package main
 
 import (
 	"encoding/json"
-	"encoding/xml"
+	"regexp"
+
+	//"encoding/xml"
 	"fmt"
 	"io/ioutil"
-	"log"
-	"net/http"
-	"podarc/interfaces"
-	"podarc/providers"
-	"time"
+
+	//"podarc/providers"
+	//"time"
 )
 
 type credentials struct {
@@ -18,12 +18,27 @@ type credentials struct {
 
 func main() {
 	creds := readCredentials("../../creds.json")
+	creds = creds
 
-	fetchedPodcast := fetchPodcastFromUrl("http://mates.nerdistind.libsynpro.com/rss", creds)
+	feedUrl := "http://mates.nerdistind.libsynpro.com/rss"
 
-	for _, episode := range fetchedPodcast.GetEpisodes() {
-		log.Println(episode.GetTitle())
+	stitcherR := regexp.MustCompile(`https://app\.stitcher\.com/browse/feed/(?P<feedId>\d+)`)
+	libsynR := regexp.MustCompile(`\S+\.libsynpro.com/rss`)
+	libSynMatches := libsynR.MatchString(feedUrl)
+	stitcherMatches := stitcherR.FindStringSubmatch(feedUrl)
+
+	if len(stitcherMatches) > 0 {
+		fmt.Println("Stitcher feed detected")
+		fmt.Println("Feed ID: " + stitcherMatches[1]) // Capture group names available via: stitcherR.SubexpNames()
+	} else if libSynMatches {
+		fmt.Println("Libsyn Pro feed detected")
 	}
+
+	//fetchedPodcast := fetchPodcastFromUrl("http://mates.nerdistind.libsynpro.com/rss", creds)
+	//
+	//for _, episode := range fetchedPodcast.GetEpisodes() {
+	//	log.Println(episode.GetTitle())
+	//}
 
 	//log.Println("Getting podcast data...")
 	//officeLadies := getStitcherPodcastFeed("467097", creds.SessionToken)
@@ -34,9 +49,9 @@ func main() {
 	//}
 }
 
-func fetchPodcastFromUrl(feedUrl string, creds credentials) interfaces.Podcast {
-
-}
+//func fetchPodcastFromUrl(feedUrl string, creds credentials) interfaces.Podcast {
+//
+//}
 
 func readCredentials(file string) credentials {
 	data, err := ioutil.ReadFile(file)
@@ -51,29 +66,29 @@ func readCredentials(file string) credentials {
 	return creds
 }
 
-func getStitcherPodcastFeed(feedId string, sess string) *providers.StitcherPodcast {
-	client := &http.Client{
-		Timeout: 10 * time.Second,
-	}
-	req, err := http.NewRequest("GET", fmt.Sprintf("https://app.stitcher.com/Service/GetFeedDetailsWithEpisodes.php?" +
-								"mode=webApp&fid=%s&max_epi=5000&sess=%s", feedId, sess), nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if resp.StatusCode != 200 {
-		log.Fatal("Bad status code while getting podcast - " + resp.Status)
-	}
-
-	podcast := &providers.StitcherPodcast{}
-
-	xmlDecoder := xml.NewDecoder(resp.Body)
-	err = xmlDecoder.Decode(podcast)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return podcast
-}
+//func getStitcherPodcastFeed(feedId string, sess string) *providers.StitcherPodcast {
+//	client := &http.Client{
+//		Timeout: 10 * time.Second,
+//	}
+//	req, err := http.NewRequest("GET", fmt.Sprintf("https://app.stitcher.com/Service/GetFeedDetailsWithEpisodes.php?" +
+//								"mode=webApp&fid=%s&max_epi=5000&sess=%s", feedId, sess), nil)
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//	resp, err := client.Do(req)
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//	if resp.StatusCode != 200 {
+//		log.Fatal("Bad status code while getting podcast - " + resp.Status)
+//	}
+//
+//	podcast := &providers.StitcherPodcast{}
+//
+//	xmlDecoder := xml.NewDecoder(resp.Body)
+//	err = xmlDecoder.Decode(podcast)
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//	return podcast
+//}
