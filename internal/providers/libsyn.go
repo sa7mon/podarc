@@ -11,12 +11,20 @@ type LibsynPodcast struct {
 }
 
 type LibsynEpisode struct {
-	Title 		string `xml:"title"`
-	Guid        string    `xml:"guid"`
-	Image       string    `xml:"itunes:image>href, attr"`
-	Description string    `xml:"description"`
-	Published   string	  `xml:"pubDate"`
-	Url 		string 	  `xml:"enclosure>url, attr"`
+	Title       string          `xml:"title"`
+	Guid        string          `xml:"guid"`
+	Image       LibsynImage     `xml:"itunes:image"`
+	Description string          `xml:"description"`
+	Published   string          `xml:"pubDate"`
+	Enclosure   LibsynEnclosure `xml:"enclosure"`
+}
+
+type LibsynEnclosure struct {
+	Url 	string `xml:"url,attr"`
+}
+
+type LibsynImage struct {
+	ImageUrl string `xml:"href,attr"`
 }
 
 func (l LibsynPodcast) NumEpisodes() int {
@@ -55,7 +63,7 @@ func (l LibsynEpisode) GetDescription() string {
 }
 
 func (l LibsynEpisode) GetUrl() string {
-	return l.Url
+	return l.Enclosure.Url
 }
 
 func (l LibsynEpisode) GetPublishedDate() string {
@@ -63,5 +71,5 @@ func (l LibsynEpisode) GetPublishedDate() string {
 }
 
 func (l LibsynEpisode) GetImageUrl() string {
-	return l.Image
+	return l.Image.ImageUrl
 }
