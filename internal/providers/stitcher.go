@@ -1,4 +1,4 @@
-package providerss
+package providers
 
 import (
 	"podarc/interfaces"
