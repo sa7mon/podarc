@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"podarc/interfaces"
 	"podarc/providers"
+	"podarc/utils"
 	"regexp"
 	"time"
 )
@@ -26,8 +27,19 @@ func main() {
 	fetchedPodcast := fetchPodcastFromUrl(feedUrl, creds)
 
 	for _, episode := range fetchedPodcast.GetEpisodes() {
-		log.Println(episode.GetTitle())
+		log.Println(episode.GetUrl())
 	}
+
+	fmt.Println("Download Started")
+	fmt.Println(fetchedPodcast.GetEpisodes()[0].GetImageUrl())
+
+	fileUrl := fetchedPodcast.GetEpisodes()[0].GetUrl()
+	err := utils.DownloadFile("podcast.mp3", fileUrl)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("Download Finished")
 }
 
 func fetchPodcastFromUrl(feedUrl string, creds credentials) interfaces.Podcast {
