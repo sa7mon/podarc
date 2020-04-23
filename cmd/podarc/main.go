@@ -21,8 +21,8 @@ func main() {
 	creds := readCredentials("../../creds.json")
 	creds = creds
 
-	//feedUrl := "http://mates.nerdistind.libsynpro.com/rss"
-	feedUrl := "https://app.stitcher.com/browse/feed/467097/details"
+	feedUrl := "http://mates.nerdistind.libsynpro.com/rss"
+	//feedUrl := "https://app.stitcher.com/browse/feed/467097/details"
 	fetchedPodcast := fetchPodcastFromUrl(feedUrl, creds)
 
 	for _, episode := range fetchedPodcast.GetEpisodes() {
@@ -40,10 +40,12 @@ func fetchPodcastFromUrl(feedUrl string, creds credentials) interfaces.Podcast {
 		fmt.Println("Stitcher feed detected")
 		fmt.Println("Feed ID: " + stitcherMatches[1]) // Capture group names available via: stitcherR.SubexpNames()
 
-		officeLadies := getStitcherPodcastFeed("467097", creds.SessionToken)
-		return officeLadies
+		stitcherPod := getStitcherPodcastFeed(stitcherMatches[1], creds.SessionToken)
+		return stitcherPod
 	} else if libSynMatches {
 		fmt.Println("Libsyn Pro feed detected")
+		libsynPod := getLibsynProPodcastFeed(feedUrl)
+		return libsynPod
 	} else {
 
 	}
@@ -61,6 +63,32 @@ func readCredentials(file string) credentials {
 		fmt.Println("Error reading creds file: ", err)
 	}
 	return creds
+}
+
+func getLibsynProPodcastFeed(rssUrl string) *providers.LibsynPodcast {
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+	req, err := http.NewRequest("GET", rssUrl, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if resp.StatusCode != 200 {
+		log.Fatal("Bad status code while getting podcast - " + resp.Status)
+	}
+
+	podcast := &providers.LibsynPodcast{}
+
+	//xmlDecoder := xml.NewDecoder(resp.Body)
+	//err = xmlDecoder.Decode(podcast)
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	return podcast
 }
 
 func getStitcherPodcastFeed(feedId string, sess string) *providers.StitcherPodcast {
