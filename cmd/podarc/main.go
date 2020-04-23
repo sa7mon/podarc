@@ -83,11 +83,11 @@ func getLibsynProPodcastFeed(rssUrl string) *providers.LibsynPodcast {
 
 	podcast := &providers.LibsynPodcast{}
 
-	//xmlDecoder := xml.NewDecoder(resp.Body)
-	//err = xmlDecoder.Decode(podcast)
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
+	xmlDecoder := xml.NewDecoder(resp.Body)
+	err = xmlDecoder.Decode(podcast)
+	if err != nil {
+		log.Fatal(err)
+	}
 	return podcast
 }
 
