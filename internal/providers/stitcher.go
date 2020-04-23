@@ -45,7 +45,14 @@ func (s StitcherPodcast) NumEpisodes() int {
 }
 
 func (s StitcherPodcast) GetEpisodes() []interfaces.PodcastEpisode {
-	panic("implement me")
+	// TODO: Might be more efficient to store these values rather than do a for loop every time the getter is called
+	// Golang doesn't allow you to directly return a slice of a type as a slice of an interface
+	// https://golang.org/doc/faq#convert_slice_of_interface
+	intEpisodes := make([]interfaces.PodcastEpisode, len(s.Episodes))
+	for i, elem := range s.Episodes {
+		intEpisodes[i] = elem
+	}
+	return intEpisodes
 }
 
 func (s StitcherPodcast) GetTitle() string {
