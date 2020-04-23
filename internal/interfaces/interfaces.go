@@ -1,17 +1,17 @@
 package interfaces
 
 type Podcast interface {
-	numEpisodes() int
+	NumEpisodes() int
 	GetEpisodes() []PodcastEpisode
-	getTitle() string
-	getDescription() string
-	getPublisher() string
+	GetTitle() string
+	GetDescription() string
+	GetPublisher() string
 }
 
 type PodcastEpisode interface {
 	GetTitle() string
-	getDescription() string
-	getUrl() string
-	getPublishedDate() string
-	getImageUrl() string
+	GetDescription() string
+	GetUrl() string
+	GetPublishedDate() string
+	GetImageUrl() string
 }

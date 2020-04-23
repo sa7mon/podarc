@@ -4,15 +4,18 @@ import (
 	"podarc/interfaces"
 )
 
+/*************************
+*
+*		Structs
+*
+**************************/
+
 type StitcherPodcast struct {
 	Feed            StitcherFeed      `xml:"feed"`
 	ShowDescription string            `xml:"show_description,attr"`
 	Episodes        []StitcherEpisode `xml:"episodes>episode"`
 }
 
-type StitcherEpisodes struct {
-	Episodes []StitcherEpisode
-}
 type StitcherFeed struct {
 	Name          string          `xml:"name"`
 	Description   string          `xml:"description"`
@@ -30,23 +33,49 @@ type StitcherEpisode struct {
 	Url 		string 	  `xml:"url, attr"`
 }
 
-func (s StitcherPodcast) numEpisodes() int {
+/*************************
+*
+*    Getters / Setters
+*
+**************************/
+
+
+func (s StitcherPodcast) NumEpisodes() int {
 	panic("implement me")
 }
 
-func (s StitcherPodcast) getEpisodes() []interfaces.PodcastEpisode {
+func (s StitcherPodcast) GetEpisodes() []interfaces.PodcastEpisode {
 	panic("implement me")
 }
 
-func (s StitcherPodcast) getTitle() string {
+func (s StitcherPodcast) GetTitle() string {
 	panic("implement me")
 }
 
-func (s StitcherPodcast) getDescription() string {
+func (s StitcherPodcast) GetDescription() string {
 	panic("implement me")
 }
 
-func (s StitcherPodcast) getPublisher() string {
+func (s StitcherPodcast) GetPublisher() string {
 	panic("implement me")
 }
 
+func (s StitcherEpisode) GetTitle() string {
+	panic("implement me")
+}
+
+func (s StitcherEpisode) GetDescription() string {
+	panic("implement me")
+}
+
+func (s StitcherEpisode) GetUrl() string {
+	panic("implement me")
+}
+
+func (s StitcherEpisode) GetPublishedDate() string {
+	panic("implement me")
+}
+
+func (s StitcherEpisode) GetImageUrl() string {
+	panic("implement me")
+}

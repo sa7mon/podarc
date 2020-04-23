@@ -3,17 +3,14 @@ package main
 import (
 	"encoding/json"
 	"encoding/xml"
+	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"podarc/interfaces"
 	"podarc/providers"
 	"regexp"
 	"time"
-
-	//"encoding/xml"
-	"fmt"
-	"io/ioutil"
-	//"time"
 )
 
 type credentials struct {
@@ -62,7 +59,7 @@ func readCredentials(file string) credentials {
 	return creds
 }
 
-func getStitcherPodcastFeed(feedId string, sess string) providers.StitcherPodcast {
+func getStitcherPodcastFeed(feedId string, sess string) *providers.StitcherPodcast {
 	client := &http.Client{
 		Timeout: 10 * time.Second,
 	}
