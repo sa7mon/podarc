@@ -1,24 +1,20 @@
 package main
 
 import (
-	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"github.com/sa7mon/podarc/internal/interfaces"
 	"github.com/sa7mon/podarc/internal/providers"
-	"io/ioutil"
+	"github.com/sa7mon/podarc/internal/utils"
 	"log"
 	"net/http"
 	"regexp"
 	"time"
 )
 
-type credentials struct {
-	SessionToken string	`json:"session_token"`
-}
 
 func main() {
-	creds := readCredentials("../../creds.json")
+	creds := utils.ReadCredentials("creds.json")
 	creds = creds
 
 	feedUrl := "http://mates.nerdistind.libsynpro.com/rss"
@@ -41,7 +37,7 @@ func main() {
 	//fmt.Println("Download Finished")
 }
 
-func fetchPodcastFromUrl(feedUrl string, creds credentials) interfaces.Podcast {
+func fetchPodcastFromUrl(feedUrl string, creds utils.Credentials) interfaces.Podcast {
 	stitcherR := regexp.MustCompile(`https://app\.stitcher\.com/browse/feed/(?P<feedId>\d+)`)
 	libsynR := regexp.MustCompile(`\S+\.libsynpro.com/rss`)
 	libSynMatches := libsynR.MatchString(feedUrl)
@@ -61,19 +57,6 @@ func fetchPodcastFromUrl(feedUrl string, creds credentials) interfaces.Podcast {
 
 	}
 	panic("Unknown URL!")
-}
-
-func readCredentials(file string) credentials {
-	data, err := ioutil.ReadFile(file)
-	if err != nil {
-		fmt.Print(err)
-	}
-	var creds credentials
-	err = json.Unmarshal(data, &creds)
-	if err != nil {
-		fmt.Println("Error reading creds file: ", err)
-	}
-	return creds
 }
 
 func getLibsynProPodcastFeed(rssUrl string) *providers.LibsynPodcast {
