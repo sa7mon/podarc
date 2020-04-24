@@ -11,14 +11,14 @@ import (
 
 type LibsynPodcast struct {
 	Title 			string 				`xml:"channel>title"`
-	ShowDescription string            	`xml:"channel>itunes:summary"`
+	ShowDescription string            	`xml:"channel>summary"` // itunes:summary
 	Episodes        []LibsynEpisode 	`xml:"channel>item"`
 }
 
 type LibsynEpisode struct {
 	Title       string          `xml:"title"`
 	Guid        string          `xml:"guid"`
-	Image       LibsynImage     `xml:"itunes:image"`
+	Image       LibsynImage     `xml:"image"`
 	Description string          `xml:"description"`
 	Published   string          `xml:"pubDate"`
 	Enclosure   LibsynEnclosure `xml:"enclosure"`
