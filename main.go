@@ -51,38 +51,12 @@ func fetchPodcastFromUrl(feedUrl string, creds utils.Credentials) interfaces.Pod
 		return stitcherPod
 	} else if libSynMatches {
 		fmt.Println("Libsyn Pro feed detected")
-		libsynPod := getLibsynProPodcastFeed(feedUrl)
+		libsynPod := providers.getLibsynProPodcastFeed(feedUrl)
 		return libsynPod
 	} else {
 
 	}
 	panic("Unknown URL!")
-}
-
-func getLibsynProPodcastFeed(rssUrl string) *providers.LibsynPodcast {
-	client := &http.Client{
-		Timeout: 10 * time.Second,
-	}
-	req, err := http.NewRequest("GET", rssUrl, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if resp.StatusCode != 200 {
-		log.Fatal("Bad status code while getting podcast - " + resp.Status)
-	}
-
-	podcast := &providers.LibsynPodcast{}
-
-	xmlDecoder := xml.NewDecoder(resp.Body)
-	err = xmlDecoder.Decode(podcast)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return podcast
 }
 
 func getStitcherPodcastFeed(feedId string, sess string) *providers.StitcherPodcast {

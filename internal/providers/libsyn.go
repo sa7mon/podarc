@@ -1,7 +1,11 @@
 package providers
 
 import (
+	"encoding/xml"
 	"github.com/sa7mon/podarc/internal/interfaces"
+	"log"
+	"net/http"
+	"time"
 )
 
 type LibsynPodcast struct {
@@ -72,4 +76,30 @@ func (l LibsynEpisode) GetPublishedDate() string {
 
 func (l LibsynEpisode) GetImageUrl() string {
 	return l.Image.ImageUrl
+}
+
+func getLibsynProPodcastFeed(rssUrl string) *LibsynPodcast {
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+	req, err := http.NewRequest("GET", rssUrl, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if resp.StatusCode != 200 {
+		log.Fatal("Bad status code while getting podcast - " + resp.Status)
+	}
+
+	podcast := &LibsynPodcast{}
+
+	xmlDecoder := xml.NewDecoder(resp.Body)
+	err = xmlDecoder.Decode(podcast)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return podcast
 }
