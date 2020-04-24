@@ -1,15 +1,12 @@
 package main
 
 import (
-	"encoding/xml"
 	"fmt"
 	"github.com/sa7mon/podarc/internal/interfaces"
 	"github.com/sa7mon/podarc/internal/providers"
 	"github.com/sa7mon/podarc/internal/utils"
 	"log"
-	"net/http"
 	"regexp"
-	"time"
 )
 
 
@@ -17,12 +14,12 @@ func main() {
 	creds := utils.ReadCredentials("creds.json")
 	creds = creds
 
-	feedUrl := "http://mates.nerdistind.libsynpro.com/rss"
-	//feedUrl := "https://app.stitcher.com/browse/feed/467097/details"
+	//feedUrl := "http://mates.nerdistind.libsynpro.com/rss"
+	feedUrl := "https://app.stitcher.com/browse/feed/467097/details"
 	fetchedPodcast := fetchPodcastFromUrl(feedUrl, creds)
 
 	for _, episode := range fetchedPodcast.GetEpisodes() {
-		log.Println(episode.GetUrl())
+		log.Println(episode.ToString())
 	}
 
 	//fmt.Println("Download Started")
@@ -47,41 +44,12 @@ func fetchPodcastFromUrl(feedUrl string, creds utils.Credentials) interfaces.Pod
 		fmt.Println("Stitcher feed detected")
 		fmt.Println("Feed ID: " + stitcherMatches[1]) // Capture group names available via: stitcherR.SubexpNames()
 
-		stitcherPod := getStitcherPodcastFeed(stitcherMatches[1], creds.SessionToken)
+		stitcherPod := providers.GetStitcherPodcastFeed(stitcherMatches[1], creds.SessionToken)
 		return stitcherPod
 	} else if libSynMatches {
 		fmt.Println("Libsyn Pro feed detected")
-		libsynPod := providers.getLibsynProPodcastFeed(feedUrl)
+		libsynPod := providers.GetLibsynProPodcastFeed(feedUrl)
 		return libsynPod
-	} else {
-
 	}
 	panic("Unknown URL!")
-}
-
-func getStitcherPodcastFeed(feedId string, sess string) *providers.StitcherPodcast {
-	client := &http.Client{
-		Timeout: 10 * time.Second,
-	}
-	req, err := http.NewRequest("GET", fmt.Sprintf("https://app.stitcher.com/Service/GetFeedDetailsWithEpisodes.php?" +
-								"mode=webApp&fid=%s&max_epi=5000&sess=%s", feedId, sess), nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if resp.StatusCode != 200 {
-		log.Fatal("Bad status code while getting podcast - " + resp.Status)
-	}
-
-	podcast := &providers.StitcherPodcast{}
-
-	xmlDecoder := xml.NewDecoder(resp.Body)
-	err = xmlDecoder.Decode(podcast)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return podcast
 }

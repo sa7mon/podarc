@@ -14,4 +14,5 @@ type PodcastEpisode interface {
 	GetUrl() string
 	GetPublishedDate() string
 	GetImageUrl() string
+	ToString() string
 }

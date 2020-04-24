@@ -1,7 +1,12 @@
 package providers
 
 import (
+	"encoding/xml"
+	"fmt"
 	"github.com/sa7mon/podarc/internal/interfaces"
+	"log"
+	"net/http"
+	"time"
 )
 
 /*************************
@@ -30,7 +35,7 @@ type StitcherEpisode struct {
 	Published   string	  `xml:"published,attr"`
 	Title       string    `xml:"title"`
 	Description string    `xml:"description"`
-	Url 		string 	  `xml:"url, attr"`
+	Url 		string 	  `xml:"url,attr"`
 }
 
 /*************************
@@ -85,4 +90,37 @@ func (s StitcherEpisode) GetPublishedDate() string {
 
 func (s StitcherEpisode) GetImageUrl() string {
 	return s.Image
+}
+
+func (s StitcherEpisode) ToString() string {
+	return fmt.Sprintf("Title: %s | Description: %s | Url: %s | PublishedDate: " +
+		"%s | ImageUrl: %s", s.GetTitle(), s.GetDescription(), s.GetUrl(), s.GetPublishedDate(),
+		s.GetImageUrl())
+}
+
+func GetStitcherPodcastFeed(feedId string, sess string) *StitcherPodcast {
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+	req, err := http.NewRequest("GET", fmt.Sprintf("https://app.stitcher.com/Service/GetFeedDetailsWithEpisodes.php?" +
+		"mode=webApp&fid=%s&max_epi=5000&sess=%s", feedId, sess), nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if resp.StatusCode != 200 {
+		log.Fatal("Bad status code while getting podcast - " + resp.Status)
+	}
+
+	podcast := &StitcherPodcast{}
+
+	xmlDecoder := xml.NewDecoder(resp.Body)
+	err = xmlDecoder.Decode(podcast)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return podcast
 }

@@ -2,6 +2,7 @@ package providers
 
 import (
 	"encoding/xml"
+	"fmt"
 	"github.com/sa7mon/podarc/internal/interfaces"
 	"log"
 	"net/http"
@@ -78,7 +79,13 @@ func (l LibsynEpisode) GetImageUrl() string {
 	return l.Image.ImageUrl
 }
 
-func getLibsynProPodcastFeed(rssUrl string) *LibsynPodcast {
+func (l LibsynEpisode) ToString() string {
+	return fmt.Sprintf("Title: %s | Description: %s | Url: %s | PublishedDate: " +
+		"%s | ImageUrl: %s", l.GetTitle(), l.GetDescription(), l.GetUrl(), l.GetPublishedDate(),
+		l.GetImageUrl())
+}
+
+func GetLibsynProPodcastFeed(rssUrl string) *LibsynPodcast {
 	client := &http.Client{
 		Timeout: 10 * time.Second,
 	}
