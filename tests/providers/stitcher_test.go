@@ -23,10 +23,26 @@ func TestStitcherUnmarshal(t *testing.T) {
 		"people who were there, can tell you.", pc.GetDescription())
 	testutils.AssertString(t, "Publisher", "Stitcher", pc.GetPublisher())
 
-	//firstEpisode := fetchedPodcast.GetEpisodes()[fetchedPodcast.NumEpisodes()-1]
-	//testutils.AssertString(t, "Episode Title", "Episode 51- Racist Peruvian Snacks", firstEpisode.GetTitle())
-	//testutils.AssertString(t, "Episode Description", "<p>Michael Ian Black and Tom Cavanagh eat snacks and talk about it!</p>", firstEpisode.GetDescription())
-	//testutils.AssertString(t, "Episode URL", "http://traffic.libsyn.com/mates/MATES51_Peruvian_Snacks.mp3?dest-id=50920", firstEpisode.GetUrl())
-	//testutils.AssertString(t, "Episode Published Date", "Mon, 05 Mar 2012 08:00:00 +0000", firstEpisode.GetPublishedDate())
-	//testutils.AssertString(t, "Episode Image URL", "http://static.libsyn.com/p/assets/8/d/b/d/8dbd7e032866e1a8/MATES_logo.jpg", firstEpisode.GetImageUrl())
+	firstEpisode := pc.GetEpisodes()[pc.NumEpisodes()-1]
+	testutils.AssertString(t, "Episode Title", "Office Ladies Trailer", firstEpisode.GetTitle())
+	testutils.AssertString(t, "Episode Description", "Join Jenna Fischer and Angela Kinsey as " +
+		"they give you a sneak peak of what's to come. " +
+		"Office Ladies premieres October 16th!", firstEpisode.GetDescription())
+	testutils.AssertString(t, "Episode URL", "https://cloudfront.wolfpub.io/OL-000.2-20190913-TrailerFinished.mp3", firstEpisode.GetUrl())
+	testutils.AssertString(t, "Episode Published Date", "2019-09-25 04:00:33", firstEpisode.GetPublishedDate())
+	testutils.AssertString(t, "Episode Image URL", "https://secureimg.stitcher.com/feedimageswide/480x270_467097.jpg", firstEpisode.GetImageUrl())
+}
+
+func TestFetchSticherPodcastFromUrl(t *testing.T) {
+	creds := utils.ReadCredentials("../../creds.json")
+
+	if len(creds.SessionToken) < 20 {
+		t.Errorf("Loaded session token missing or invalid.")
+	}
+	p, err := providers.FetchPodcastFromUrl(" https://app.stitcher.com/browse/feed/467097/details", creds)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	testutils.AssertTypesAreEqual(t, p, &providers.StitcherPodcast{})
 }

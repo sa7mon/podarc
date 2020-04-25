@@ -1,13 +1,14 @@
 package providers
 
 import (
+	"errors"
 	"fmt"
 	"github.com/sa7mon/podarc/internal/interfaces"
 	"github.com/sa7mon/podarc/internal/utils"
 	"regexp"
 )
 
-func FetchPodcastFromUrl(feedUrl string, creds utils.Credentials) interfaces.Podcast {
+func FetchPodcastFromUrl(feedUrl string, creds utils.Credentials) (interfaces.Podcast, error) {
 	stitcherR := regexp.MustCompile(`https://app\.stitcher\.com/browse/feed/(?P<feedId>\d+)`)
 	libsynR := regexp.MustCompile(`\S+\.libsynpro.com/rss`)
 	libSynMatches := libsynR.MatchString(feedUrl)
@@ -18,11 +19,11 @@ func FetchPodcastFromUrl(feedUrl string, creds utils.Credentials) interfaces.Pod
 		fmt.Println("Feed ID: " + stitcherMatches[1]) // Capture group names available via: stitcherR.SubexpNames()
 
 		stitcherPod := GetStitcherPodcastFeed(stitcherMatches[1], creds.SessionToken)
-		return stitcherPod
+		return stitcherPod, nil
 	} else if libSynMatches {
 		fmt.Println("Libsyn Pro feed detected")
 		libsynPod := GetLibsynProPodcastFeed(feedUrl)
-		return libsynPod
+		return libsynPod, nil
 	}
-	panic("Unknown URL!")
+	return nil, errors.New(fmt.Sprintf("Unsupported feed URL '%s'", feedUrl))
 }

@@ -19,12 +19,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	creds := utils.ReadCredentials("creds.json")
-	creds = creds
+	credentials := utils.ReadCredentials("creds.json")
 
-	//feedUrl := "http://mates.nerdistind.libsynpro.com/rss"
-	//feedUrl := "https://app.stitcher.com/browse/feed/467097/details"
-	fetchedPodcast := providers.FetchPodcastFromUrl(*feedUrl, creds)
+	fetchedPodcast, err := providers.FetchPodcastFromUrl(*feedUrl, credentials)
+	if err != nil {
+		log.Println("Error fetching podcast from URL - " + err.Error())
+		os.Exit(1)
+	}
 
 	for _, episode := range fetchedPodcast.GetEpisodes() {
 		log.Println(episode.ToString())
