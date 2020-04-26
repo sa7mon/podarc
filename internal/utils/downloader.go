@@ -18,12 +18,16 @@ import (
 // and we can pass this into io.TeeReader() which will report progress on each write cycle.
 type WriteCounter struct {
 	TotalBytes uint64
+	DoPrintProgress bool
 }
 
 func (wc *WriteCounter) Write(p []byte) (int, error) {
 	n := len(p)
 	wc.TotalBytes += uint64(n)
-	wc.PrintProgress()
+
+	if wc.DoPrintProgress {
+		wc.PrintProgress()
+	}
 	return n, nil
 }
 
@@ -45,7 +49,7 @@ func (wc WriteCounter) PrintProgress() {
 // DownloadFile will download a url to a local file. It's efficient because it will
 // write as it downloads and not load the whole file into memory. We pass an io.TeeReader
 // into Copy() to report progress on the download.
-func DownloadFile(filepath string, url string) error {
+func DownloadFile(filepath string, url string, printProgress bool) error {
 
 	// Create the file, but give it a tmp file extension, this means we won't overwrite a
 	// file until it's downloaded, but we'll remove the tmp extension once downloaded.
@@ -63,7 +67,7 @@ func DownloadFile(filepath string, url string) error {
 	defer resp.Body.Close()
 
 	// Create our progress reporter and pass it to be used alongside our writer
-	counter := &WriteCounter{}
+	counter := &WriteCounter{DoPrintProgress: printProgress}
 	if _, err = io.Copy(out, io.TeeReader(resp.Body, counter)); err != nil {
 		out.Close()
 		return err

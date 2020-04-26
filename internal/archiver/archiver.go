@@ -1,14 +1,16 @@
 package archiver
 
 import (
+	"fmt"
 	"github.com/sa7mon/podarc/internal/interfaces"
+	"github.com/sa7mon/podarc/internal/utils"
 	"log"
 	"net/url"
 	"os"
 	"path"
 )
 
-func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteExisting bool) {
+func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteExisting bool) error {
 	var episodesToArchive []interfaces.PodcastEpisode
 
 	for _, episode := range podcast.GetEpisodes() {
@@ -26,17 +28,16 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 	log.Printf("[%s] Found %d episodes to archive", podcast.GetTitle(), len(episodesToArchive))
 
 	// For each episode not currently downloaded - download it.
-
-	//fmt.Println("Download Started")
-	//fmt.Println(fetchedPodcast.GetEpisodes()[0].GetImageUrl())
-	//
-	//fileUrl := fetchedPodcast.GetEpisodes()[0].GetUrl()
-	//err := utils.DownloadFile("podcast.mp3", fileUrl)
-	//if err != nil {
-	//	panic(err)
-	//}
-	//
-	//fmt.Println("Download Finished")
+	for _, episode := range episodesToArchive {
+		fileUrl := episode.GetUrl()
+		episodePath := path.Join(destDirectory, GetFileNameFromEpisodeURL(episode.GetUrl()))
+		err := utils.DownloadFile(episodePath, fileUrl, false)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("[%s] Downloaded %s", podcast.GetTitle(),GetFileNameFromEpisodeURL(episode.GetUrl()))
+	}
+	return nil
 }
 
 func GetFileNameFromEpisodeURL(fullUrl string) string {
