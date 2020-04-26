@@ -1,6 +1,10 @@
 package archiver
 
 import (
+	//"fmt"
+	//"errors"
+	//"fmt"
+	id3 "github.com/mikkyang/id3-go"
 	"github.com/sa7mon/podarc/internal/interfaces"
 	"github.com/sa7mon/podarc/internal/utils"
 	"log"
@@ -35,9 +39,28 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 		if err != nil {
 			return err
 		}
+		// Write ID3 tags to file
+		err = WriteID3TagsToFile(episodePath, episode, podcast)
+		if err != nil {
+			return err
+		}
 		archivedEpisodes += 1
 		log.Printf("[%s] (%d/%d) Downloaded %s", podcast.GetTitle(), archivedEpisodes, len(episodesToArchive), GetFileNameFromEpisodeURL(episode.GetUrl()))
 	}
+	return nil
+}
+
+func WriteID3TagsToFile(filePath string, episode interfaces.PodcastEpisode, podcast interfaces.Podcast) error {
+	file, err := id3.Open(filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	file.SetArtist(podcast.GetTitle())
+	file.SetTitle(episode.GetTitle())
+	file.SetGenre("Podcast")
+
 	return nil
 }
 
