@@ -1,8 +1,8 @@
 package archiver
 
 import (
-	"github.com/mikkyang/id3-go"
-	v2 "github.com/mikkyang/id3-go/v2"
+	"github.com/sa7mon/podarc/internal/id3-go"
+	v2 "github.com/sa7mon/podarc/internal/id3-go/v2"
 	"github.com/sa7mon/podarc/internal/interfaces"
 	"github.com/sa7mon/podarc/internal/utils"
 	"log"
