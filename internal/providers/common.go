@@ -15,13 +15,9 @@ func FetchPodcastFromUrl(feedUrl string, creds utils.Credentials) (interfaces.Po
 	stitcherMatches := stitcherR.FindStringSubmatch(feedUrl)
 
 	if len(stitcherMatches) > 0 {
-		fmt.Println("Stitcher feed detected")
-		fmt.Println("Feed ID: " + stitcherMatches[1]) // Capture group names available via: stitcherR.SubexpNames()
-
 		stitcherPod := GetStitcherPodcastFeed(stitcherMatches[1], creds.SessionToken)
 		return stitcherPod, nil
 	} else if libSynMatches {
-		fmt.Println("Libsyn Pro feed detected")
 		libsynPod := GetLibsynProPodcastFeed(feedUrl)
 		return libsynPod, nil
 	}
