@@ -3,3 +3,4 @@ creds.json
 *.exe
 *.mp3
 temp/
+.DS_Store

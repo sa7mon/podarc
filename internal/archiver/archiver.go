@@ -1,10 +1,7 @@
 package archiver
 
 import (
-	//"fmt"
-	//"errors"
-	//"fmt"
-	id3 "github.com/mikkyang/id3-go"
+	"github.com/mikkyang/id3-go"
 	"github.com/sa7mon/podarc/internal/interfaces"
 	"github.com/sa7mon/podarc/internal/utils"
 	"log"
@@ -45,7 +42,7 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 			return err
 		}
 		archivedEpisodes += 1
-		log.Printf("[%s] (%d/%d) Downloaded %s", podcast.GetTitle(), archivedEpisodes, len(episodesToArchive), GetFileNameFromEpisodeURL(episode.GetUrl()))
+		log.Printf("[%s] (%d/%d) Downloaded %s", podcast.GetTitle(), archivedEpisodes, len(episodesToArchive), episode.GetTitle())
 	}
 	return nil
 }
@@ -60,6 +57,18 @@ func WriteID3TagsToFile(filePath string, episode interfaces.PodcastEpisode, podc
 	file.SetArtist(podcast.GetTitle())
 	file.SetTitle(episode.GetTitle())
 	file.SetGenre("Podcast")
+
+	//if file.Tagger.Version()[0:1] == "2" {
+	//	log.Println("Detected v2 tag. Writing publisher...")
+	//	ft := v2.V23FrameTypeMap["TPUB"]
+	//	textFrame := v2.NewTextFrame(ft, podcast.GetPublisher())
+	//	//allFrames = append(allFrames, textFrame)
+	//	file.AddFrames(textFrame)
+	//}
+
+	// Set year recorded
+	// Save podcast publisher to one of the tags
+	// Set cover image
 
 	return nil
 }
