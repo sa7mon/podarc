@@ -8,23 +8,22 @@ import (
 	"path"
 )
 
-func ArchivePodcast(podcast interfaces.Podcast, destDirectory string) {
-	// Determine which episodes have not already been downloaded
-
+func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteExisting bool) {
 	var episodesToArchive []interfaces.PodcastEpisode
 
 	for _, episode := range podcast.GetEpisodes() {
-		episodeFileName := GetFileNameFromEpisodeURL(episode.GetUrl())
-
-		// if file does not exist in destDirectory, add to episodesToArchive
-		episodePath := path.Join(destDirectory, episodeFileName)
-		log.Println("DEBUG: Checking if file exists: " + episodePath)
-		if _, err := os.Stat(episodePath); os.IsNotExist(err) {
+		if overwriteExisting {
 			episodesToArchive = append(episodesToArchive, episode)
+		} else {   // if file does not exist in destDirectory, add to episodesToArchive
+			episodeFileName := GetFileNameFromEpisodeURL(episode.GetUrl())
+			episodePath := path.Join(destDirectory, episodeFileName)
+			if _, err := os.Stat(episodePath); os.IsNotExist(err) {
+				episodesToArchive = append(episodesToArchive, episode)
+			}
 		}
 	}
 
-	log.Printf("Found %d episodes to archive", len(episodesToArchive))
+	log.Printf("[%s] Found %d episodes to archive", podcast.GetTitle(), len(episodesToArchive))
 
 	// For each episode not currently downloaded - download it.
 

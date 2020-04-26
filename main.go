@@ -13,6 +13,7 @@ import (
 func main() {
 	feedUrl := flag.String("feedUrl", "", "URL of podcast feed to archive. (Required)")
 	destDirectory := flag.String("outputDir", "", "Directory to save the files into. (Required)")
+	overwrite := flag.Bool("overwrite", false, "Overwrite episodes already downloaded. Default: false")
 	flag.Parse()
 
 	if *feedUrl == "" || !utils.IsValidUrl(*feedUrl){
@@ -35,5 +36,5 @@ func main() {
 		os.Exit(1)
 	}
 
-	archiver.ArchivePodcast(fetchedPodcast, *destDirectory)
+	archiver.ArchivePodcast(fetchedPodcast, *destDirectory, *overwrite)
 }
