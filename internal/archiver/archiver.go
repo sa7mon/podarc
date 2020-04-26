@@ -2,6 +2,7 @@ package archiver
 
 import (
 	"github.com/mikkyang/id3-go"
+	v2 "github.com/mikkyang/id3-go/v2"
 	"github.com/sa7mon/podarc/internal/interfaces"
 	"github.com/sa7mon/podarc/internal/utils"
 	"log"
@@ -54,9 +55,17 @@ func WriteID3TagsToFile(filePath string, episode interfaces.PodcastEpisode, podc
 	}
 	defer file.Close()
 
+	log.Println("Version: " + file.Version())
+
 	file.SetArtist(podcast.GetTitle())
 	file.SetTitle(episode.GetTitle())
 	file.SetGenre("Podcast")
+
+	//log.Println("Detected v2 tag. Writing publisher...")
+	ft := v2.V23FrameTypeMap["TIT2"]
+	titleFrame := v2.NewTextFrame(ft, episode.GetTitle())
+	//allFrames = append(allFrames, textFrame)
+	file.AddFrames(titleFrame)
 
 	//if file.Tagger.Version()[0:1] == "2" {
 	//	log.Println("Detected v2 tag. Writing publisher...")
