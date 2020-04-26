@@ -1,7 +1,6 @@
 package archiver
 
 import (
-	"fmt"
 	"github.com/sa7mon/podarc/internal/interfaces"
 	"github.com/sa7mon/podarc/internal/utils"
 	"log"
@@ -27,6 +26,7 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 
 	log.Printf("[%s] Found %d episodes to archive", podcast.GetTitle(), len(episodesToArchive))
 
+	archivedEpisodes := 0
 	// For each episode not currently downloaded - download it.
 	for _, episode := range episodesToArchive {
 		fileUrl := episode.GetUrl()
@@ -35,7 +35,8 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 		if err != nil {
 			return err
 		}
-		fmt.Printf("[%s] Downloaded %s", podcast.GetTitle(),GetFileNameFromEpisodeURL(episode.GetUrl()))
+		archivedEpisodes += 1
+		log.Printf("[%s] (%d/%d) Downloaded %s", podcast.GetTitle(), archivedEpisodes, len(episodesToArchive), GetFileNameFromEpisodeURL(episode.GetUrl()))
 	}
 	return nil
 }

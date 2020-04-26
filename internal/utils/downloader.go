@@ -74,7 +74,9 @@ func DownloadFile(filepath string, url string, printProgress bool) error {
 	}
 
 	// The progress use the same line so print a new line once it's finished downloading
-	fmt.Print("\n")
+	if printProgress {
+		fmt.Print("\n")
+	}
 
 	// Close the file without defer so it can happen before Rename()
 	out.Close()
