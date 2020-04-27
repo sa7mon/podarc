@@ -75,6 +75,15 @@ func (l LibsynEpisode) GetPublishedDate() string {
 	return l.Published
 }
 
+func (l LibsynEpisode) GetParsedPublishedDate() (time.Time, error) {
+	layout := "Mon, 02 Jan 2006 15:04:05 -0700"
+	t, err := time.Parse(layout, l.GetPublishedDate())
+	if err != nil {
+		return time.Time{}, err
+	}
+	return t, nil
+}
+
 func (l LibsynEpisode) GetImageUrl() string {
 	return l.Image.ImageUrl
 }
