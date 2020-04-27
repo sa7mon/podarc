@@ -1,5 +1,7 @@
 package interfaces
 
+import "time"
+
 type Podcast interface {
 	NumEpisodes() int
 	GetEpisodes() []PodcastEpisode
@@ -13,6 +15,7 @@ type PodcastEpisode interface {
 	GetDescription() string
 	GetUrl() string
 	GetPublishedDate() string
+	GetParsedPublishedDate() (time.Time, error)
 	GetImageUrl() string
 	ToString() string
 }

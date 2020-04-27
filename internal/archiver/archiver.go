@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"strconv"
 )
 
 func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteExisting bool) error {
@@ -75,8 +76,13 @@ func WriteID3TagsToFile(filePath string, episode interfaces.PodcastEpisode, podc
 	file.SetArtist(podcast.GetTitle())
 	file.SetTitle(episode.GetTitle())
 	file.SetGenre("Podcast")
+	publishedDate, err := episode.GetParsedPublishedDate()
+	if err != nil {
+		return err
+	}
+	file.SetYear(strconv.Itoa(publishedDate.Year()))
 
-	// Set year recorded
+	// Set date recorded
 	// Save podcast publisher to one of the tags
 	// Set cover image
 
