@@ -17,3 +17,11 @@ podarc --feedUrl https://provider.here/show.xml
         Overwrite episodes already downloaded. Default: false
 
 ```
+
+## Development
+
+Run tests:
+
+```
+(fill in)
+```
