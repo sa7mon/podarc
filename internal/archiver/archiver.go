@@ -50,7 +50,7 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 
 func WriteID3TagsToFile(filePath string, episode interfaces.PodcastEpisode, podcast interfaces.Podcast) error {
 	/*
-		Hacky workaround because the library doesn't support deleting ID3v1 tags.
+		Contains a hacky workaround because the library doesn't support deleting ID3v1 tags.
 		We need to use ID3v2 because v1 has a 30-character limit on the title field (and likely others).
 		If the file has v1 tags, re-open forcing v2 tags which effectively erases all existing tags
 		that we don't set here.
@@ -62,9 +62,9 @@ func WriteID3TagsToFile(filePath string, episode interfaces.PodcastEpisode, podc
 	}
 	defer file.Close()
 
-	if file.Version()[0:1] == "1" {
-		// Re-open the file, forcing v2
+	if file.Version()[0:1] == "1" {  // Re-open the file, forcing v2
 		log.Println("ID3v1 detected. Re-opening file and forcing ID3v2...")
+
 		file.Close()
 		file, err = id3.Open(filePath, true)
 		if err != nil {
@@ -76,12 +76,16 @@ func WriteID3TagsToFile(filePath string, episode interfaces.PodcastEpisode, podc
 	file.SetArtist(podcast.GetTitle())
 	file.SetTitle(episode.GetTitle())
 	file.SetGenre("Podcast")
+
 	publishedDate, err := episode.GetParsedPublishedDate()
 	if err != nil {
 		return err
 	}
 	file.SetYear(strconv.Itoa(publishedDate.Year()))
+	file.SetDate(episode.GetPublishedDate())
+	file.SetReleaseYear(episode.GetPublishedDate())
 
+	// TODO:
 	// Set date recorded
 	// Save podcast publisher to one of the tags
 	// Set cover image
