@@ -4,14 +4,16 @@ import (
 	"github.com/sa7mon/podarc/internal/id3-go"
 	"github.com/sa7mon/podarc/internal/interfaces"
 	"github.com/sa7mon/podarc/internal/utils"
+	"github.com/stvp/slug"
 	"log"
 	"net/url"
 	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 )
 
-func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteExisting bool) error {
+func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteExisting bool, renameFiles bool) error {
 	var episodesToArchive []interfaces.PodcastEpisode
 
 	for _, episode := range podcast.GetEpisodes() {
@@ -41,6 +43,12 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 		err = WriteID3TagsToFile(episodePath, episode, podcast)
 		if err != nil {
 			return err
+		}
+		if renameFiles {
+			err := RenameFile(episodePath, episode)
+			if err != nil {
+				return err
+			}
 		}
 		archivedEpisodes += 1
 		log.Printf("[%s] (%d/%d) Downloaded %s", podcast.GetTitle(), archivedEpisodes, len(episodesToArchive), episode.GetTitle())
@@ -102,4 +110,17 @@ func GetFileNameFromEpisodeURL(fullUrl string) string {
 	// url.Path returns the path portion of the URL (without query parameters)
 	// path.Base() returns everything after the final slash
 	return path.Base(parsed.Path)
+}
+
+func RenameFile(episodeFile string, episode interfaces.PodcastEpisode) error {
+	oldDate, _ := episode.GetParsedPublishedDate()
+	isoDate := oldDate.Format("2006-01-02")
+
+	slug.Replacement = '-'
+	cleanTitle := slug.Clean(episode.GetTitle())
+	newName := isoDate + "_" + cleanTitle + filepath.Ext(episodeFile)
+	err := os.Rename(episodeFile, filepath.Dir(episodeFile) + "/" + newName)
+	if err != nil {
+		return err
+	}
 }
