@@ -14,7 +14,7 @@ func main() {
 	feedUrl := flag.String("feedUrl", "", "URL of podcast feed to archive. (Required)")
 	destDirectory := flag.String("outputDir", "", "Directory to save the files into. (Required)")
 	overwrite := flag.Bool("overwrite", false, "Overwrite episodes already downloaded. Default: false")
-	renameFiles := flag.Bool("renameFiles", true, "Rename downloaded files to friendly names. Default: true")
+	renameFiles := flag.Bool("renameFiles", true, "Rename downloaded files to friendly names.")
 	flag.Parse()
 
 	if *feedUrl == "" || !utils.IsValidUrl(*feedUrl){

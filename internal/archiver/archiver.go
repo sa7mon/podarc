@@ -123,4 +123,5 @@ func RenameFile(episodeFile string, episode interfaces.PodcastEpisode) error {
 	if err != nil {
 		return err
 	}
+	return nil
 }
