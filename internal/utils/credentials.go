@@ -8,6 +8,7 @@ import (
 
 type Credentials struct {
 	SessionToken string	`json:"session_token"`
+	StitcherNewToken string `json:"stitcher_new_token"`
 }
 
 func ReadCredentials(file string) Credentials {

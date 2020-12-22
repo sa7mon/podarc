@@ -154,7 +154,9 @@ func (e StitcherNewEpisode) GetParsedPublishedDate() (time.Time, error) {
 }
 
 func (e StitcherNewEpisode) ToString() string {
-	return "Not implemented!"
+	return fmt.Sprintf("Title: %s | Description: %s | Url: %s | PublishedDate: " +
+		"%s | ImageUrl: %s", e.GetTitle(), e.GetDescription(), e.GetUrl(), e.GetPublishedDate(),
+		e.GetImageUrl())
 }
 
 func parseEpisodesFromResponse(response latestEpisodesResponse) []StitcherNewEpisode {
@@ -180,7 +182,7 @@ func parseEpisodesFromResponse(response latestEpisodesResponse) []StitcherNewEpi
 	return parsedEpisodes
 }
 
-func GetStitcherNewPodcastFeed(slug string) *StitcherNewPodcast {
+func GetStitcherNewPodcastFeed(slug string, creds string) *StitcherNewPodcast {
 	stitcherPod := StitcherNewPodcast{}
 
 	client := &http.Client{
@@ -210,12 +212,17 @@ func GetStitcherNewPodcastFeed(slug string) *StitcherNewPodcast {
 	// Set podcast description, feed URL, and episodes from the first page
 	stitcherPod.ShowDescription = firstPageResponse.Data.Shows[0].Description
 	stitcherPod.Feed = firstPageResponse.Data.Shows[0].StitcherLink
+	stitcherPod.Name = firstPageResponse.Data.Shows[0].Title
 
 	firstPageEpisodes := parseEpisodesFromResponse(*firstPageResponse)
 	stitcherPod.Episodes = firstPageEpisodes
 
 	numPages := math.Ceil(float64(firstPageResponse.Orchestration.TotalCount) / float64(firstPageResponse.Orchestration.PageSize))
 	fmt.Println(fmt.Sprintf("Number of pages: %v", numPages))
+
+	for _, ep := range stitcherPod.Episodes {
+		fmt.Println(ep.ToString())
+	}
 
 	return &stitcherPod
 }

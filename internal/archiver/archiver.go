@@ -13,7 +13,8 @@ import (
 	"strconv"
 )
 
-func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteExisting bool, renameFiles bool) error {
+func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteExisting bool, renameFiles bool,
+	creds utils.Credentials) error {
 	var episodesToArchive []interfaces.PodcastEpisode
 
 	for _, episode := range podcast.GetEpisodes() {
@@ -35,7 +36,12 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 	for _, episode := range episodesToArchive {
 		fileUrl := episode.GetUrl()
 		episodePath := path.Join(destDirectory, GetFileNameFromEpisodeURL(episode.GetUrl()))
-		err := utils.DownloadFile(episodePath, fileUrl, false)
+
+		headers := make(map[string]string, 1)
+		if podcast.GetPublisher() == "Stitcher" {
+			headers["Authorization"] = "Bearer " + creds.StitcherNewToken
+		}
+		err := utils.DownloadFile(episodePath, fileUrl, headers, false)
 		if err != nil {
 			return err
 		}
