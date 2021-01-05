@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/sa7mon/podarc/internal/interfaces"
 	"log"
-	"math"
 	"net/http"
 	"strconv"
 	"time"
@@ -216,13 +215,6 @@ func GetStitcherNewPodcastFeed(slug string, creds string) *StitcherNewPodcast {
 
 	firstPageEpisodes := parseEpisodesFromResponse(*firstPageResponse)
 	stitcherPod.Episodes = firstPageEpisodes
-
-	numPages := math.Ceil(float64(firstPageResponse.Orchestration.TotalCount) / float64(firstPageResponse.Orchestration.PageSize))
-	fmt.Println(fmt.Sprintf("Number of pages: %v", numPages))
-
-	for _, ep := range stitcherPod.Episodes {
-		fmt.Println(ep.ToString())
-	}
 
 	return &stitcherPod
 }
