@@ -83,9 +83,9 @@ func DownloadFile(filepath string, url string, headers map[string]string, printP
 		return err
 	}
 
-	// The progress use the same line so print a new line once it's finished downloading
+	// Move "print cursor" back to the beginning of the line so the progress line gets overwritten
 	if printProgress {
-		fmt.Print("\n")
+		fmt.Printf("\r")
 	}
 
 	// Close the file without defer so it can happen before Rename()
