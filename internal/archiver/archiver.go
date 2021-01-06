@@ -35,6 +35,11 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 	archivedEpisodes := 0
 	// For each episode not currently downloaded - download it.
 	for _, episode := range episodesToArchive {
+		valid, reason := utils.IsStitcherTokenValid(creds.StitcherNewToken)
+		if !valid {
+			log.Fatal("Bad Stitcher token: " + reason)
+		}
+
 		fileUrl := episode.GetUrl()
 		episodePath := path.Join(destDirectory, GetFileNameFromEpisodeURL(episode.GetUrl()))
 

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/sa7mon/podarc/internal/interfaces"
+	"github.com/sa7mon/podarc/internal/utils"
 	"log"
 	"net/http"
 	"strconv"
@@ -182,13 +183,23 @@ func parseEpisodesFromResponse(response latestEpisodesResponse) []StitcherNewEpi
 }
 
 func GetStitcherNewPodcastFeed(slug string, creds string) *StitcherNewPodcast {
+	/*
+		The Stitcher API will return a practically unlimited number of episodes in a single page.
+
+
+	*/
+
+	valid, reason := utils.IsStitcherTokenValid(creds)
+	if !valid {
+		log.Fatal("Bad Stitcher token: " + reason)
+	}
 	stitcherPod := StitcherNewPodcast{}
 
 	client := &http.Client{
 		Timeout: 10 * time.Second,
 	}
 	req, err := http.NewRequest("GET", fmt.Sprintf(
-		"https://api.prod.stitcher.com/show/%s/latestEpisodes?count=20&page=0", slug), nil)
+		"https://api.prod.stitcher.com/show/%s/latestEpisodes?count=10000&page=0", slug), nil)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -206,6 +217,11 @@ func GetStitcherNewPodcastFeed(slug string, creds string) *StitcherNewPodcast {
 	err = jsonDecoder.Decode(firstPageResponse)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	// The API doesn't currently have a page size limit. Fail here if that ever changes and we'll do proper paging.
+	if firstPageResponse.Orchestration.TotalCount > firstPageResponse.Orchestration.PageSize {
+		log.Fatal("Show has more than 1 page of episodes")
 	}
 
 	// Set podcast description, feed URL, and episodes from the first page
