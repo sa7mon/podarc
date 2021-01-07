@@ -185,8 +185,8 @@ func parseEpisodesFromResponse(response latestEpisodesResponse) []StitcherNewEpi
 func GetStitcherNewPodcastFeed(slug string, creds string) *StitcherNewPodcast {
 	/*
 		The Stitcher API will return a practically unlimited number of episodes in a single page.
-
-
+		This method will fetch up to 10,000 episodes on one page. If more than 10,000 are returned,
+		we log.Fatal() and exit instead of missing episodes.
 	*/
 
 	valid, reason := utils.IsStitcherTokenValid(creds)
