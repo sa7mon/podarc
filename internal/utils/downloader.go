@@ -49,8 +49,7 @@ func (wc WriteCounter) PrintProgress() {
 // DownloadFile will download a url to a local file. It's efficient because it will
 // write as it downloads and not load the whole file into memory. We pass an io.TeeReader
 // into Copy() to report progress on the download.
-func DownloadFile(filepath string, url string, printProgress bool) error {
-
+func DownloadFile(filepath string, url string, headers map[string]string, printProgress bool) error {
 	// Create the file, but give it a tmp file extension, this means we won't overwrite a
 	// file until it's downloaded, but we'll remove the tmp extension once downloaded.
 	out, err := os.Create(filepath + ".tmp")
@@ -58,8 +57,19 @@ func DownloadFile(filepath string, url string, printProgress bool) error {
 		return err
 	}
 
+	client := &http.Client{}
+
 	// Get the data
-	resp, err := http.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return err
+	}
+	//resp, err := http.Get(url)
+	for key, value := range headers {
+		req.Header.Add(key, value)
+	}
+
+	resp, err := client.Do(req)
 	if err != nil {
 		out.Close()
 		return err
@@ -73,9 +83,9 @@ func DownloadFile(filepath string, url string, printProgress bool) error {
 		return err
 	}
 
-	// The progress use the same line so print a new line once it's finished downloading
+	// Move "print cursor" back to the beginning of the line so the progress line gets overwritten
 	if printProgress {
-		fmt.Print("\n")
+		fmt.Printf("\r")
 	}
 
 	// Close the file without defer so it can happen before Rename()

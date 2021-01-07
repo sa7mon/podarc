@@ -1,6 +1,7 @@
 package archiver
 
 import (
+	"fmt"
 	"github.com/sa7mon/podarc/internal/id3-go"
 	"github.com/sa7mon/podarc/internal/interfaces"
 	"github.com/sa7mon/podarc/internal/utils"
@@ -13,7 +14,8 @@ import (
 	"strconv"
 )
 
-func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteExisting bool, renameFiles bool) error {
+func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteExisting bool, renameFiles bool,
+	creds utils.Credentials) error {
 	var episodesToArchive []interfaces.PodcastEpisode
 
 	for _, episode := range podcast.GetEpisodes() {
@@ -33,9 +35,19 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 	archivedEpisodes := 0
 	// For each episode not currently downloaded - download it.
 	for _, episode := range episodesToArchive {
+		valid, reason := utils.IsStitcherTokenValid(creds.StitcherNewToken)
+		if !valid {
+			log.Fatal("Bad Stitcher token: " + reason)
+		}
+
 		fileUrl := episode.GetUrl()
 		episodePath := path.Join(destDirectory, GetFileNameFromEpisodeURL(episode.GetUrl()))
-		err := utils.DownloadFile(episodePath, fileUrl, false)
+
+		headers := make(map[string]string, 1)
+		if podcast.GetPublisher() == "Stitcher" {
+			headers["Authorization"] = "Bearer " + creds.StitcherNewToken
+		}
+		err := utils.DownloadFile(episodePath, fileUrl, headers, true)
 		if err != nil {
 			return err
 		}
@@ -51,7 +63,8 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 			}
 		}
 		archivedEpisodes += 1
-		log.Printf("[%s] (%d/%d) Downloaded %s", podcast.GetTitle(), archivedEpisodes, len(episodesToArchive), episode.GetTitle())
+		fmt.Printf("\r")
+		log.Printf("[%s] (%d/%d) archived episode: '%s'", podcast.GetTitle(), archivedEpisodes, len(episodesToArchive), episode.GetTitle())
 	}
 	return nil
 }
@@ -68,7 +81,7 @@ func WriteID3TagsToFile(filePath string, episode interfaces.PodcastEpisode, podc
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	//defer file.Close()
 
 	if file.Version()[0:1] == "1" {  // Re-open the file, forcing v2
 		log.Println("ID3v1 detected. Re-opening file and forcing ID3v2...")
@@ -98,6 +111,10 @@ func WriteID3TagsToFile(filePath string, episode interfaces.PodcastEpisode, podc
 	// Save podcast publisher to one of the tags
 	// Set cover image
 
+	err = file.Close()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

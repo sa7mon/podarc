@@ -37,7 +37,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = archiver.ArchivePodcast(fetchedPodcast, *destDirectory, *overwrite, *renameFiles)
+	err = archiver.ArchivePodcast(fetchedPodcast, *destDirectory, *overwrite, *renameFiles, credentials)
 	if err != nil {
 		log.Println("Error: " + err.Error())
 	}
