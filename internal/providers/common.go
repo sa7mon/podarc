@@ -26,6 +26,9 @@ func FetchPodcastFromUrl(feedUrl string, creds utils.Credentials) (interfaces.Po
 	} else if libSynMatches {
 		libsynPod := GetLibsynProPodcastFeed(feedUrl)
 		return libsynPod, nil
+	} else {
+		genericPod := GetGenericPodcastFeed(feedUrl)
+		return genericPod, nil
 	}
 	return nil, errors.New(fmt.Sprintf("Unsupported feed URL '%s'", feedUrl))
 }
