@@ -11,14 +11,14 @@ import (
 )
 
 func main() {
-	feedUrl := flag.String("feedUrl", "", "URL of podcast feed to archive. (Required)")
+	feedURL := flag.String("feedUrl", "", "URL of podcast feed to archive. (Required)")
 	destDirectory := flag.String("outputDir", "", "Directory to save the files into. (Required)")
 	overwrite := flag.Bool("overwrite", false, "Overwrite episodes already downloaded. Default: false")
 	renameFiles := flag.Bool("renameFiles", true, "Rename downloaded files to friendly names.")
 	flag.Parse()
 
-	if *feedUrl == "" || !utils.IsValidUrl(*feedUrl){
-		fmt.Printf("Error - Invalid feedUrl: '%s'\n", *feedUrl)
+	if *feedURL == "" || !utils.IsValidURL(*feedURL){
+		fmt.Printf("Error - Invalid feedUrl: '%s'\n", *feedURL)
 		flag.PrintDefaults()
 		os.Exit(1)
 	}
@@ -31,7 +31,7 @@ func main() {
 
 	credentials := utils.ReadCredentials("creds.json")
 
-	fetchedPodcast, err := providers.FetchPodcastFromUrl(*feedUrl, credentials)
+	fetchedPodcast, err := providers.FetchPodcastFromURL(*feedURL, credentials)
 	if err != nil {
 		log.Println("Error fetching podcast from URL - " + err.Error())
 		os.Exit(1)

@@ -8,8 +8,8 @@ import (
 )
 
 func TestLibsynUnmarshal(t *testing.T) {
-	feedUrl := "http://mates.nerdistind.libsynpro.com/rss"
-	fetchedPodcast := providers.GetLibsynProPodcastFeed(feedUrl)
+	feedURL := "http://mates.nerdistind.libsynpro.com/rss"
+	fetchedPodcast := providers.GetLibsynProPodcastFeed(feedURL)
 
 	testutils.AssertString(t, "Podcast Title", "Mike and Tom Eat Snacks", fetchedPodcast.GetTitle())
 	testutils.AssertString(t, "Podcast Description","Michael Ian Black and Tom Cavanagh eat snacks and talk about it!", fetchedPodcast.GetDescription())
@@ -25,7 +25,7 @@ func TestLibsynUnmarshal(t *testing.T) {
 
 func TestFetchPodcastFromUrl(t *testing.T) {
 	blankCreds := utils.Credentials{}
-	p, err := providers.FetchPodcastFromUrl("http://mates.nerdistind.libsynpro.com/rss", blankCreds)
+	p, err := providers.FetchPodcastFromURL("http://mates.nerdistind.libsynpro.com/rss", blankCreds)
 	if err != nil {
 		t.Errorf(err.Error())
 	}

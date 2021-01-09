@@ -17,7 +17,7 @@ type LibsynPodcast struct {
 
 type LibsynEpisode struct {
 	Title       string          `xml:"title"`
-	Guid        string          `xml:"guid"`
+	GUID        string          `xml:"guid"`
 	Image       LibsynImage     `xml:"image"`
 	Description string          `xml:"description"`
 	Published   string          `xml:"pubDate"`
@@ -29,7 +29,7 @@ type LibsynEnclosure struct {
 }
 
 type LibsynImage struct {
-	ImageUrl string `xml:"href,attr"`
+	ImageURL string `xml:"href,attr"`
 }
 
 func (l LibsynPodcast) NumEpisodes() int {
@@ -85,7 +85,7 @@ func (l LibsynEpisode) GetParsedPublishedDate() (time.Time, error) {
 }
 
 func (l LibsynEpisode) GetImageURL() string {
-	return l.Image.ImageUrl
+	return l.Image.ImageURL
 }
 
 func (l LibsynEpisode) ToString() string {
@@ -94,11 +94,11 @@ func (l LibsynEpisode) ToString() string {
 		l.GetImageURL())
 }
 
-func GetLibsynProPodcastFeed(rssUrl string) *LibsynPodcast {
+func GetLibsynProPodcastFeed(rssURL string) *LibsynPodcast {
 	client := &http.Client{
 		Timeout: 10 * time.Second,
 	}
-	req, err := http.NewRequest("GET", rssUrl, nil)
+	req, err := http.NewRequest("GET", rssURL, nil)
 	if err != nil {
 		log.Fatal(err)
 	}

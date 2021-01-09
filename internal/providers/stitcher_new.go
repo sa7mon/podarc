@@ -94,12 +94,12 @@ type StitcherNewPodcast struct {
 }
 
 type StitcherNewEpisode struct {
-	Id	string
-	Image string
-	Published time.Time
-	Title string
+	Id          string
+	Image       string
+	Published   time.Time
+	Title       string
 	Description string
-	Url string
+	URL         string
 }
 
 func (s StitcherNewPodcast) NumEpisodes() int {
@@ -138,7 +138,7 @@ func (e StitcherNewEpisode) GetDescription() string {
 }
 
 func (e StitcherNewEpisode) GetURL() string {
-	return e.Url
+	return e.URL
 }
 
 func (e StitcherNewEpisode) GetPublishedDate() string {
@@ -170,11 +170,11 @@ func parseEpisodesFromResponse(response latestEpisodesResponse) []StitcherNewEpi
 		newEpisode.Description = respEpisode.Description
 
 		// Stitcher Premium-only episodes have the AudioURLRestricted field set. Otherwise, use AudioURL
-		audioUrlRestricted := fmt.Sprintf("%v", respEpisode.AudioURLRestricted)
-		if audioUrlRestricted != "" && audioUrlRestricted != "null"{
-			newEpisode.Url = audioUrlRestricted
+		audioURLRestricted := fmt.Sprintf("%v", respEpisode.AudioURLRestricted)
+		if audioURLRestricted != "" && audioURLRestricted != "null"{
+			newEpisode.URL = audioURLRestricted
 		} else {
-			newEpisode.Url = respEpisode.AudioURL
+			newEpisode.URL = respEpisode.AudioURL
 		}
 
 		parsedEpisodes = append(parsedEpisodes, newEpisode)
