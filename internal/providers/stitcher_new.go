@@ -137,7 +137,7 @@ func (e StitcherNewEpisode) GetDescription() string {
 	return e.Description
 }
 
-func (e StitcherNewEpisode) GetUrl() string {
+func (e StitcherNewEpisode) GetURL() string {
 	return e.Url
 }
 
@@ -145,7 +145,7 @@ func (e StitcherNewEpisode) GetPublishedDate() string {
 	return e.Published.String()
 }
 
-func (e StitcherNewEpisode) GetImageUrl() string {
+func (e StitcherNewEpisode) GetImageURL() string {
 	return e.Image
 }
 
@@ -155,8 +155,8 @@ func (e StitcherNewEpisode) GetParsedPublishedDate() (time.Time, error) {
 
 func (e StitcherNewEpisode) ToString() string {
 	return fmt.Sprintf("Title: %s | Description: %s | Url: %s | PublishedDate: " +
-		"%s | ImageUrl: %s", e.GetTitle(), e.GetDescription(), e.GetUrl(), e.GetPublishedDate(),
-		e.GetImageUrl())
+		"%s | ImageUrl: %s", e.GetTitle(), e.GetDescription(), e.GetURL(), e.GetPublishedDate(),
+		e.GetImageURL())
 }
 
 func parseEpisodesFromResponse(response latestEpisodesResponse) []StitcherNewEpisode {

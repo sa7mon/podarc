@@ -22,7 +22,7 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 		if overwriteExisting {
 			episodesToArchive = append(episodesToArchive, episode)
 		} else {   // if file does not exist in destDirectory, add to episodesToArchive
-			episodeFileName := GetFileNameFromEpisodeURL(episode.GetUrl())
+			episodeFileName := GetFileNameFromEpisodeURL(episode.GetURL())
 			episodePath := path.Join(destDirectory, episodeFileName)
 			if _, err := os.Stat(episodePath); os.IsNotExist(err) {
 				episodesToArchive = append(episodesToArchive, episode)
@@ -30,24 +30,24 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 		}
 	}
 
-	log.Printf("[%s] Found %d episodes to archive", podcast.GetTitle(), len(episodesToArchive))
+	log.Printf("[%s] [archiver] Found %d episodes to archive", podcast.GetTitle(), len(episodesToArchive))
 
 	archivedEpisodes := 0
 	// For each episode not currently downloaded - download it.
 	for _, episode := range episodesToArchive {
-		valid, reason := utils.IsStitcherTokenValid(creds.StitcherNewToken)
-		if !valid {
-			log.Fatal("Bad Stitcher token: " + reason)
-		}
-
-		fileUrl := episode.GetUrl()
-		episodePath := path.Join(destDirectory, GetFileNameFromEpisodeURL(episode.GetUrl()))
+		fileURL := episode.GetURL()
+		episodePath := path.Join(destDirectory, GetFileNameFromEpisodeURL(episode.GetURL()))
 
 		headers := make(map[string]string, 1)
 		if podcast.GetPublisher() == "Stitcher" {
+			valid, reason := utils.IsStitcherTokenValid(creds.StitcherNewToken)
+			if !valid {
+				log.Fatal("Bad Stitcher token: " + reason)
+			}
 			headers["Authorization"] = "Bearer " + creds.StitcherNewToken
 		}
-		err := utils.DownloadFile(episodePath, fileUrl, headers, true)
+		log.Printf("[%s] [archiver] Downloading episode '%s'...", podcast.GetTitle(), episode.GetTitle())
+		err := utils.DownloadFile(episodePath, fileURL, headers, false)
 		if err != nil {
 			return err
 		}
@@ -64,7 +64,7 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 		}
 		archivedEpisodes += 1
 		fmt.Printf("\r")
-		log.Printf("[%s] (%d/%d) archived episode: '%s'", podcast.GetTitle(), archivedEpisodes, len(episodesToArchive), episode.GetTitle())
+		log.Printf("[%s] [archiver] (%d/%d) archived episode: '%s'", podcast.GetTitle(), archivedEpisodes, len(episodesToArchive), episode.GetTitle())
 	}
 	return nil
 }
