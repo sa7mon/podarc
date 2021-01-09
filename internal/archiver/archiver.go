@@ -14,6 +14,8 @@ import (
 	"strconv"
 )
 
+var concurrentDownloads = 2
+
 func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteExisting bool, renameFiles bool,
 	creds utils.Credentials) error {
 	var episodesToArchive []interfaces.PodcastEpisode
@@ -29,42 +31,50 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 			}
 		}
 	}
-
+	log.Printf("[%s] [archiver] Found %d total episodes", podcast.GetTitle(), len(podcast.GetEpisodes()))
 	log.Printf("[%s] [archiver] Found %d episodes to archive", podcast.GetTitle(), len(episodesToArchive))
 
 	archivedEpisodes := 0
 	// For each episode not currently downloaded - download it.
-	for _, episode := range episodesToArchive {
-		fileURL := episode.GetUrl()
-		episodePath := path.Join(destDirectory, GetFileNameFromEpisodeURL(episode.GetUrl()))
 
-		headers := make(map[string]string, 1)
-		if podcast.GetPublisher() == "Stitcher" {
-			valid, reason := utils.IsStitcherTokenValid(creds.StitcherNewToken)
-			if !valid {
-				log.Fatal("Bad Stitcher token: " + reason)
+	var channel = make(chan int, concurrentDownloads)
+
+	for _, episode := range episodesToArchive {
+		channel <- 1
+		go func(episodeToArchive interfaces.PodcastEpisode) error {
+			fileURL := episodeToArchive.GetUrl()
+			episodePath := path.Join(destDirectory, GetFileNameFromEpisodeURL(episodeToArchive.GetUrl()))
+
+			headers := make(map[string]string, 1)
+			if podcast.GetPublisher() == "Stitcher" {
+				valid, reason := utils.IsStitcherTokenValid(creds.StitcherNewToken)
+				if !valid {
+					log.Fatal("Bad Stitcher token: " + reason)
+				}
+				headers["Authorization"] = "Bearer " + creds.StitcherNewToken
 			}
-			headers["Authorization"] = "Bearer " + creds.StitcherNewToken
-		}
-		log.Printf("[%s] [archiver] Downloading episode '%s'...", podcast.GetTitle(), episode.GetTitle())
-		err := utils.DownloadFile(episodePath, fileURL, headers, false)
-		if err != nil {
-			return err
-		}
-		// Write ID3 tags to file
-		err = WriteID3TagsToFile(episodePath, episode, podcast)
-		if err != nil {
-			return err
-		}
-		if renameFiles {
-			err := RenameFile(episodePath, episode)
+			log.Printf("[%s] [archiver] Downloading episode '%s'...", podcast.GetTitle(), episodeToArchive.GetTitle())
+			err := utils.DownloadFile(episodePath, fileURL, headers, false)
 			if err != nil {
 				return err
 			}
-		}
-		archivedEpisodes++
-		fmt.Printf("\r")
-		log.Printf("[%s] [archiver] (%d/%d) archived episode: '%s'", podcast.GetTitle(), archivedEpisodes, len(episodesToArchive), episode.GetTitle())
+			// Write ID3 tags to file
+			err = WriteID3TagsToFile(episodePath, episodeToArchive, podcast)
+			if err != nil {
+				return err
+			}
+			if renameFiles {
+				err := RenameFile(episodePath, episodeToArchive)
+				if err != nil {
+					return err
+				}
+			}
+			archivedEpisodes++
+			fmt.Printf("\r")
+			log.Printf("[%s] [archiver] (%d/%d) archived episode: '%s'", podcast.GetTitle(), archivedEpisodes, len(episodesToArchive), episodeToArchive.GetTitle())
+			<-channel
+			return nil
+		}(episode)
 	}
 	return nil
 }
