@@ -31,7 +31,7 @@ func main() {
 
 	credentials := utils.ReadCredentials("creds.json")
 
-	fetchedPodcast, err := providers.FetchPodcastFromUrl(*feedURL, credentials)
+	fetchedPodcast, err := providers.FetchPodcastFromURL(*feedURL, credentials)
 	if err != nil {
 		log.Println("Error fetching podcast from URL - " + err.Error())
 		os.Exit(1)

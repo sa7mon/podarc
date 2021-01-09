@@ -25,7 +25,7 @@ func TestLibsynUnmarshal(t *testing.T) {
 
 func TestFetchPodcastFromUrl(t *testing.T) {
 	blankCreds := utils.Credentials{}
-	p, err := providers.FetchPodcastFromUrl("http://mates.nerdistind.libsynpro.com/rss", blankCreds)
+	p, err := providers.FetchPodcastFromURL("http://mates.nerdistind.libsynpro.com/rss", blankCreds)
 	if err != nil {
 		t.Errorf(err.Error())
 	}

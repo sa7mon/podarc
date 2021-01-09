@@ -39,7 +39,7 @@ func TestFetchSticherPodcastFromUrl(t *testing.T) {
 	if len(creds.SessionToken) < 20 {
 		t.Errorf("Loaded session token missing or invalid.")
 	}
-	p, err := providers.FetchPodcastFromUrl(" https://app.stitcher.com/browse/feed/467097/details", creds)
+	p, err := providers.FetchPodcastFromURL(" https://app.stitcher.com/browse/feed/467097/details", creds)
 	if err != nil {
 		t.Errorf(err.Error())
 	}

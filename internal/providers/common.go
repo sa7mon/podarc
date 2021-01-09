@@ -6,7 +6,7 @@ import (
 	"regexp"
 )
 
-func FetchPodcastFromUrl(feedURL string, creds utils.Credentials) (interfaces.Podcast, error) {
+func FetchPodcastFromURL(feedURL string, creds utils.Credentials) (interfaces.Podcast, error) {
 	stitcherR := regexp.MustCompile(`https://app\.stitcher\.com/browse/feed/(?P<feedId>\d+)`)
 	libsynR := regexp.MustCompile(`\S+\.libsynpro.com/rss`)
 	stitcherNewR := regexp.MustCompile(`https://www\.stitcher\.com/show/(?P<slug>[a-zA-Z0-9-]+)`)
