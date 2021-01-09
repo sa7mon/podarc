@@ -24,7 +24,7 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 		if overwriteExisting {
 			episodesToArchive = append(episodesToArchive, episode)
 		} else {   // if file does not exist in destDirectory, add to episodesToArchive
-			episodeFileName := GetFileNameFromEpisodeURL(episode.GetUrl())
+			episodeFileName := GetFileNameFromEpisodeURL(episode.GetURL())
 			episodePath := path.Join(destDirectory, episodeFileName)
 			if _, err := os.Stat(episodePath); os.IsNotExist(err) {
 				episodesToArchive = append(episodesToArchive, episode)
@@ -42,8 +42,8 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 	for _, episode := range episodesToArchive {
 		channel <- 1
 		go func(episodeToArchive interfaces.PodcastEpisode) error {
-			fileURL := episodeToArchive.GetUrl()
-			episodePath := path.Join(destDirectory, GetFileNameFromEpisodeURL(episodeToArchive.GetUrl()))
+			fileURL := episodeToArchive.GetURL()
+			episodePath := path.Join(destDirectory, GetFileNameFromEpisodeURL(episodeToArchive.GetURL()))
 
 			headers := make(map[string]string, 1)
 			if podcast.GetPublisher() == "Stitcher" {

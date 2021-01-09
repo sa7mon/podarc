@@ -28,9 +28,9 @@ func TestStitcherUnmarshal(t *testing.T) {
 	testutils.AssertString(t, "Episode Description", "Join Jenna Fischer and Angela Kinsey as " +
 		"they give you a sneak peak of what's to come. " +
 		"Office Ladies premieres October 16th!", firstEpisode.GetDescription())
-	testutils.AssertString(t, "Episode URL", "https://cloudfront.wolfpub.io/OL-000.2-20190913-TrailerFinished.mp3", firstEpisode.GetUrl())
+	testutils.AssertString(t, "Episode URL", "https://cloudfront.wolfpub.io/OL-000.2-20190913-TrailerFinished.mp3", firstEpisode.GetURL())
 	testutils.AssertString(t, "Episode Published Date", "2019-09-25 04:00:33", firstEpisode.GetPublishedDate())
-	testutils.AssertString(t, "Episode Image URL", "https://secureimg.stitcher.com/feedimageswide/480x270_467097.jpg", firstEpisode.GetImageUrl())
+	testutils.AssertString(t, "Episode Image URL", "https://secureimg.stitcher.com/feedimageswide/480x270_467097.jpg", firstEpisode.GetImageURL())
 }
 
 func TestFetchSticherPodcastFromUrl(t *testing.T) {

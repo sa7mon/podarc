@@ -72,7 +72,7 @@ type GenericEpisode struct {
 	Summary     string `xml:"summary"`
 	Encoded     string `xml:"encoded"`
 	Duration    string `xml:"duration"`
-	Guid        struct {
+	GUID        struct {
 		Text        string `xml:",chardata"`
 		IsPermaLink string `xml:"isPermaLink,attr"`
 	} `xml:"guid"`
@@ -118,7 +118,7 @@ func (e GenericEpisode) GetDescription() string {
 	return e.Description
 }
 
-func (e GenericEpisode) GetUrl() string {
+func (e GenericEpisode) GetURL() string {
 	return e.Enclosure.URL
 }
 
@@ -135,7 +135,7 @@ func (e GenericEpisode) GetParsedPublishedDate() (time.Time, error) {
 	return t, nil
 }
 
-func (e GenericEpisode) GetImageUrl() string {
+func (e GenericEpisode) GetImageURL() string {
 	return e.Image.Href
 }
 

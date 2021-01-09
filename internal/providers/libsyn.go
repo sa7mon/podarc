@@ -67,7 +67,7 @@ func (l LibsynEpisode) GetDescription() string {
 	return l.Description
 }
 
-func (l LibsynEpisode) GetUrl() string {
+func (l LibsynEpisode) GetURL() string {
 	return l.Enclosure.Url
 }
 
@@ -84,14 +84,14 @@ func (l LibsynEpisode) GetParsedPublishedDate() (time.Time, error) {
 	return t, nil
 }
 
-func (l LibsynEpisode) GetImageUrl() string {
+func (l LibsynEpisode) GetImageURL() string {
 	return l.Image.ImageURL
 }
 
 func (l LibsynEpisode) ToString() string {
-	return fmt.Sprintf("Title: %s | Descriptio n: %s | URL: %s | PublishedDate: " +
-		"%s | ImageURL: %s", l.GetTitle(), l.GetDescription(), l.GetUrl(), l.GetPublishedDate(),
-		l.GetImageUrl())
+	return fmt.Sprintf("Title: %s | Description: %s | Url: %s | PublishedDate: " +
+		"%s | ImageUrl: %s", l.GetTitle(), l.GetDescription(), l.GetURL(), l.GetPublishedDate(),
+		l.GetImageURL())
 }
 
 func GetLibsynProPodcastFeed(rssURL string) *LibsynPodcast {
