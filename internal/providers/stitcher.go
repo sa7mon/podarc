@@ -80,7 +80,7 @@ func (s StitcherEpisode) GetDescription() string {
 	return s.Description
 }
 
-func (s StitcherEpisode) GetUrl() string {
+func (s StitcherEpisode) GetURL() string {
 	return s.Url
 }
 
@@ -97,14 +97,14 @@ func (s StitcherEpisode) GetParsedPublishedDate() (time.Time, error) {
 	return t, nil
 }
 
-func (s StitcherEpisode) GetImageUrl() string {
+func (s StitcherEpisode) GetImageURL() string {
 	return s.Image
 }
 
 func (s StitcherEpisode) ToString() string {
 	return fmt.Sprintf("Title: %s | Description: %s | Url: %s | PublishedDate: " +
-		"%s | ImageUrl: %s", s.GetTitle(), s.GetDescription(), s.GetUrl(), s.GetPublishedDate(),
-		s.GetImageUrl())
+		"%s | ImageUrl: %s", s.GetTitle(), s.GetDescription(), s.GetURL(), s.GetPublishedDate(),
+		s.GetImageURL())
 }
 
 func GetStitcherPodcastFeed(feedId string, sess string) *StitcherPodcast {

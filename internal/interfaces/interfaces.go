@@ -13,9 +13,9 @@ type Podcast interface {
 type PodcastEpisode interface {
 	GetTitle() string
 	GetDescription() string
-	GetUrl() string
+	GetURL() string
 	GetPublishedDate() string
 	GetParsedPublishedDate() (time.Time, error)
-	GetImageUrl() string
+	GetImageURL() string
 	ToString() string
 }
