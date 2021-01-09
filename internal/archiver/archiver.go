@@ -12,6 +12,7 @@ import (
 	"path"
 	"path/filepath"
 	"strconv"
+	"strings"
 )
 
 var concurrentDownloads = 2
@@ -24,7 +25,12 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 		if overwriteExisting {
 			episodesToArchive = append(episodesToArchive, episode)
 		} else {   // if file does not exist in destDirectory, add to episodesToArchive
-			episodeFileName := GetFileNameFromEpisodeURL(episode.GetURL())
+			var episodeFileName string
+			if renameFiles {
+				episodeFileName = GetEpisodeFileName(episode.GetURL(), episode) // Clean/normalize audio file name
+			} else {
+				episodeFileName = GetFileNameFromEpisodeURL(episode) // Leave file name as it is in the URL
+			}
 			episodePath := path.Join(destDirectory, episodeFileName)
 			if _, err := os.Stat(episodePath); os.IsNotExist(err) {
 				episodesToArchive = append(episodesToArchive, episode)
@@ -43,7 +49,7 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 		channel <- 1
 		go func(episodeToArchive interfaces.PodcastEpisode) error {
 			fileURL := episodeToArchive.GetURL()
-			episodePath := path.Join(destDirectory, GetFileNameFromEpisodeURL(episodeToArchive.GetURL()))
+			episodePath := path.Join(destDirectory, GetFileNameFromEpisodeURL(episodeToArchive))
 
 			headers := make(map[string]string, 1)
 			if podcast.GetPublisher() == "Stitcher" {
@@ -64,10 +70,11 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 				return err
 			}
 			if renameFiles {
-				err := RenameFile(episodePath, episodeToArchive)
+				err = os.Rename(episodePath, GetEpisodeFileName(episodePath, episodeToArchive))
 				if err != nil {
 					return err
 				}
+				return nil
 			}
 			archivedEpisodes++
 			fmt.Printf("\r")
@@ -128,8 +135,25 @@ func WriteID3TagsToFile(filePath string, episode interfaces.PodcastEpisode, podc
 	return nil
 }
 
-func GetFileNameFromEpisodeURL(fullUrl string) string {
-	parsed, err := url.Parse(fullUrl)
+/**
+	Returns the name of the file this episode should be saved as
+ */
+func GetEpisodeFileName(episodeFile string, episode interfaces.PodcastEpisode) string {
+	oldDate, _ := episode.GetParsedPublishedDate()
+	isoDate := oldDate.Format("2006-01-02")
+
+	slug.Replacement = '-'
+	cleanTitle := slug.Clean(episode.GetTitle())
+	extension := filepath.Ext(episodeFile)
+	if strings.ContainsRune(extension, '?') {
+		extension = extension[0:strings.Index(extension, "?")]
+	}
+	newName := isoDate + "_" + cleanTitle + extension
+	return newName
+}
+
+func GetFileNameFromEpisodeURL(episode interfaces.PodcastEpisode) string {
+	parsed, err := url.Parse(episode.GetURL())
 	if err != nil {
 		log.Println(err)
 	}
@@ -137,18 +161,4 @@ func GetFileNameFromEpisodeURL(fullUrl string) string {
 	// url.Path returns the path portion of the URL (without query parameters)
 	// path.Base() returns everything after the final slash
 	return path.Base(parsed.Path)
-}
-
-func RenameFile(episodeFile string, episode interfaces.PodcastEpisode) error {
-	oldDate, _ := episode.GetParsedPublishedDate()
-	isoDate := oldDate.Format("2006-01-02")
-
-	slug.Replacement = '-'
-	cleanTitle := slug.Clean(episode.GetTitle())
-	newName := isoDate + "_" + cleanTitle + filepath.Ext(episodeFile)
-	err := os.Rename(episodeFile, filepath.Dir(episodeFile) + "/" + newName)
-	if err != nil {
-		return err
-	}
-	return nil
 }
