@@ -1,21 +1,19 @@
 package providers
 
 import (
-	"errors"
-	"fmt"
 	"github.com/sa7mon/podarc/internal/interfaces"
 	"github.com/sa7mon/podarc/internal/utils"
 	"regexp"
 )
 
-func FetchPodcastFromUrl(feedUrl string, creds utils.Credentials) (interfaces.Podcast, error) {
+func FetchPodcastFromUrl(feedURL string, creds utils.Credentials) (interfaces.Podcast, error) {
 	stitcherR := regexp.MustCompile(`https://app\.stitcher\.com/browse/feed/(?P<feedId>\d+)`)
 	libsynR := regexp.MustCompile(`\S+\.libsynpro.com/rss`)
 	stitcherNewR := regexp.MustCompile(`https://www\.stitcher\.com/show/(?P<slug>[a-zA-Z0-9-]+)`)
 
-	libSynMatches := libsynR.MatchString(feedUrl)
-	stitcherMatches := stitcherR.FindStringSubmatch(feedUrl)
-	stitcherNewMatches := stitcherNewR.FindStringSubmatch(feedUrl)
+	libSynMatches := libsynR.MatchString(feedURL)
+	stitcherMatches := stitcherR.FindStringSubmatch(feedURL)
+	stitcherNewMatches := stitcherNewR.FindStringSubmatch(feedURL)
 
 	if len(stitcherMatches) > 0 {
 		stitcherPod := GetStitcherPodcastFeed(stitcherMatches[1], creds.SessionToken)
@@ -24,11 +22,10 @@ func FetchPodcastFromUrl(feedUrl string, creds utils.Credentials) (interfaces.Po
 		stitcherNewPod := GetStitcherNewPodcastFeed(stitcherNewMatches[1], creds.StitcherNewToken)
 		return stitcherNewPod, nil
 	} else if libSynMatches {
-		libsynPod := GetLibsynProPodcastFeed(feedUrl)
+		libsynPod := GetLibsynProPodcastFeed(feedURL)
 		return libsynPod, nil
 	} else {
-		genericPod := GetGenericPodcastFeed(feedUrl)
+		genericPod := GetGenericPodcastFeed(feedURL)
 		return genericPod, nil
 	}
-	return nil, errors.New(fmt.Sprintf("Unsupported feed URL '%s'", feedUrl))
 }

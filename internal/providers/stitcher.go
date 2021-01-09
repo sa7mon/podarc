@@ -30,12 +30,12 @@ type StitcherFeed struct { 		  // TODO: Possibly move these properties to Stitch
 }
 
 type StitcherEpisode struct {
-	Id          string    `xml:"id,attr"`
-	Image       string    `xml:"episodeImage,attr"`
-	Published   string	  `xml:"published,attr"`
-	Title       string    `xml:"title"`
-	Description string    `xml:"description"`
-	Url 		string 	  `xml:"url,attr"`
+	Id          string `xml:"id,attr"`
+	Image       string `xml:"episodeImage,attr"`
+	Published   string `xml:"published,attr"`
+	Title       string `xml:"title"`
+	Description string `xml:"description"`
+	URL         string `xml:"url,attr"`
 }
 
 /*************************
@@ -81,7 +81,7 @@ func (s StitcherEpisode) GetDescription() string {
 }
 
 func (s StitcherEpisode) GetUrl() string {
-	return s.Url
+	return s.URL
 }
 
 func (s StitcherEpisode) GetPublishedDate() string {
@@ -102,17 +102,17 @@ func (s StitcherEpisode) GetImageUrl() string {
 }
 
 func (s StitcherEpisode) ToString() string {
-	return fmt.Sprintf("Title: %s | Description: %s | Url: %s | PublishedDate: " +
-		"%s | ImageUrl: %s", s.GetTitle(), s.GetDescription(), s.GetUrl(), s.GetPublishedDate(),
+	return fmt.Sprintf("Title: %s | Description: %s | URL: %s | PublishedDate: " +
+		"%s | ImageURL: %s", s.GetTitle(), s.GetDescription(), s.GetUrl(), s.GetPublishedDate(),
 		s.GetImageUrl())
 }
 
-func GetStitcherPodcastFeed(feedId string, sess string) *StitcherPodcast {
+func GetStitcherPodcastFeed(feedID string, sess string) *StitcherPodcast {
 	client := &http.Client{
 		Timeout: 10 * time.Second,
 	}
 	req, err := http.NewRequest("GET", fmt.Sprintf("https://app.stitcher.com/Service/GetFeedDetailsWithEpisodes.php?" +
-		"mode=webApp&fid=%s&max_epi=5000&sess=%s", feedId, sess), nil)
+		"mode=webApp&fid=%s&max_epi=5000&sess=%s", feedID, sess), nil)
 	if err != nil {
 		log.Fatal(err)
 	}

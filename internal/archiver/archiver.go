@@ -35,7 +35,7 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 	archivedEpisodes := 0
 	// For each episode not currently downloaded - download it.
 	for _, episode := range episodesToArchive {
-		fileUrl := episode.GetUrl()
+		fileURL := episode.GetUrl()
 		episodePath := path.Join(destDirectory, GetFileNameFromEpisodeURL(episode.GetUrl()))
 
 		headers := make(map[string]string, 1)
@@ -47,7 +47,7 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 			headers["Authorization"] = "Bearer " + creds.StitcherNewToken
 		}
 		log.Printf("[%s] [archiver] Downloading episode '%s'...", podcast.GetTitle(), episode.GetTitle())
-		err := utils.DownloadFile(episodePath, fileUrl, headers, false)
+		err := utils.DownloadFile(episodePath, fileURL, headers, false)
 		if err != nil {
 			return err
 		}
@@ -62,7 +62,7 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 				return err
 			}
 		}
-		archivedEpisodes += 1
+		archivedEpisodes++
 		fmt.Printf("\r")
 		log.Printf("[%s] [archiver] (%d/%d) archived episode: '%s'", podcast.GetTitle(), archivedEpisodes, len(episodesToArchive), episode.GetTitle())
 	}
