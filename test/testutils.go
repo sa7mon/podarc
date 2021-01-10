@@ -26,8 +26,8 @@ func AssertEqual(t *testing.T, first interface{}, second interface{}) {
 	}
 }
 
-func AssertNotEmpty(t *testing.T, s string) {
+func AssertNotEmpty(t *testing.T, testName string, s string) {
 	if len(s) < 1 {
-		t.Errorf("string is empty")
+		t.Errorf("[%s] string is empty", testName)
 	}
 }
