@@ -1,6 +1,6 @@
 name: Go
 env:
-  GO111MODULE: on
+  GO111MODULE: off
 
 on:
   push:
