@@ -7,13 +7,20 @@ import (
 )
 
 func TestStitcherUnmarshal(t *testing.T) {
-	creds := utils.ReadCredentials("../../creds.json")
 
-	if len(creds.SessionToken) < 20 {
+	testCreds := utils.Credentials{SessionToken: "asdf1234_session_token", StitcherNewToken: "asdf_stitcher_new_token"}
+
+	//if _, err := os.Stat("../../creds.json"); os.IsNotExist(err) {
+	//	// path/to/whatever does not exist
+	//}
+
+	//creds := utils.ReadCredentials("../../creds.json")
+
+	if len(testCreds.SessionToken) < 20 {
 		t.Errorf("Loaded session token missing or invalid.")
 	}
 
-	pc := GetStitcherPodcastFeed("467097", creds.SessionToken)
+	pc := GetStitcherPodcastFeed("467097", testCreds.SessionToken)
 
 	test.AssertString(t, "Podcast Title", "Office Ladies", pc.GetTitle())
 	test.AssertString(t, "Podcast Description", "The Office co-stars and best friends, Jenna " +
@@ -23,12 +30,12 @@ func TestStitcherUnmarshal(t *testing.T) {
 	test.AssertString(t, "Publisher", "Stitcher", pc.GetPublisher())
 
 	firstEpisode := pc.GetEpisodes()[pc.NumEpisodes()-1]
-	test.AssertString(t, "Episode Title", "Office Ladies Trailer", firstEpisode.GetTitle())
-	test.AssertString(t, "Episode Description", "Join Jenna Fischer and Angela Kinsey as " +
-		"they give you a sneak peak of what's to come. " +
-		"Office Ladies premieres October 16th!", firstEpisode.GetDescription())
-	test.AssertString(t, "Episode URL", "https://cloudfront.wolfpub.io/OL-000.2-20190913-TrailerFinished.mp3", firstEpisode.GetURL())
-	test.AssertString(t, "Episode Published Date", "2019-09-25 04:00:33", firstEpisode.GetPublishedDate())
+	test.AssertString(t, "Episode Title", "Happy New Year!", firstEpisode.GetTitle())
+	test.AssertString(t, "Episode Description", "The Office Ladies are taking this week off," +
+		" but we have a special New Years Eve memory shared by the one and only, Creed Bratton. We'll be back " +
+		"January 8th with The Fire.&nbsp;", firstEpisode.GetDescription())
+	test.AssertString(t, "Episode URL", "https://s3.amazonaws.com/stitcher.assets/audio/premium_required.mp3", firstEpisode.GetURL())
+	test.AssertString(t, "Episode Published Date", "2019-12-31 13:04:00", firstEpisode.GetPublishedDate())
 	test.AssertString(t, "Episode Image URL", "https://secureimg.stitcher.com/feedimageswide/480x270_467097.jpg", firstEpisode.GetImageURL())
 }
 
