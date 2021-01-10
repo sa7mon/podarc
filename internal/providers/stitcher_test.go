@@ -7,14 +7,7 @@ import (
 )
 
 func TestStitcherUnmarshal(t *testing.T) {
-
 	testCreds := utils.Credentials{SessionToken: "asdf1234_session_token", StitcherNewToken: "asdf_stitcher_new_token"}
-
-	//if _, err := os.Stat("../../creds.json"); os.IsNotExist(err) {
-	//	// path/to/whatever does not exist
-	//}
-
-	//creds := utils.ReadCredentials("../../creds.json")
 
 	if len(testCreds.SessionToken) < 20 {
 		t.Errorf("Loaded session token missing or invalid.")
@@ -40,12 +33,12 @@ func TestStitcherUnmarshal(t *testing.T) {
 }
 
 func TestFetchSticherPodcastFromUrl(t *testing.T) {
-	creds := utils.ReadCredentials("../../creds.json")
+	testCreds := utils.Credentials{SessionToken: "asdf1234_session_token", StitcherNewToken: "asdf_stitcher_new_token"}
 
-	if len(creds.SessionToken) < 20 {
+	if len(testCreds.SessionToken) < 20 {
 		t.Errorf("Loaded session token missing or invalid.")
 	}
-	p, err := FetchPodcastFromURL(" https://app.stitcher.com/browse/feed/467097/details", creds)
+	p, err := FetchPodcastFromURL(" https://app.stitcher.com/browse/feed/467097/details", testCreds)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
