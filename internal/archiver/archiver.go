@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"github.com/sa7mon/podarc/internal/id3-go"
+	"github.com/sa7mon/podarc/internal/id3"
 )
 
 var concurrentDownloads = 2
