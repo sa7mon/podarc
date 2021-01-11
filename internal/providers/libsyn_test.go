@@ -1,7 +1,6 @@
 package providers
 
 import (
-	"github.com/sa7mon/podarc/internal/providers"
 	"github.com/sa7mon/podarc/internal/utils"
 	"github.com/sa7mon/podarc/test"
 	"testing"
@@ -9,7 +8,7 @@ import (
 
 func TestLibsynUnmarshal(t *testing.T) {
 	feedURL := "http://mates.nerdistind.libsynpro.com/rss"
-	fetchedPodcast := providers.GetLibsynProPodcastFeed(feedURL)
+	fetchedPodcast := GetLibsynProPodcastFeed(feedURL)
 
 	test.AssertString(t, "Podcast Title", "Mike and Tom Eat Snacks", fetchedPodcast.GetTitle())
 	test.AssertString(t, "Podcast Description","Michael Ian Black and Tom Cavanagh eat snacks and talk about it!", fetchedPodcast.GetDescription())
@@ -25,10 +24,10 @@ func TestLibsynUnmarshal(t *testing.T) {
 
 func TestFetchPodcastFromUrl(t *testing.T) {
 	blankCreds := utils.Credentials{}
-	p, err := providers.FetchPodcastFromURL("http://mates.nerdistind.libsynpro.com/rss", blankCreds)
+	p, err := FetchPodcastFromURL("http://mates.nerdistind.libsynpro.com/rss", blankCreds)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
 
-	test.AssertTypesAreEqual(t, p, &providers.LibsynPodcast{})
+	test.AssertTypesAreEqual(t, p, &LibsynPodcast{})
 }

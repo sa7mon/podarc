@@ -20,3 +20,14 @@ func AssertTypesAreEqual(t *testing.T, first interface{}, second interface{}) {
 	}
 }
 
+func AssertEqual(t *testing.T, first interface{}, second interface{}) {
+	if first != second {
+		t.Errorf("%s and %s are not equal", first, second)
+	}
+}
+
+func AssertNotEmpty(t *testing.T, testName string, s string) {
+	if len(s) < 1 {
+		t.Errorf("[%s] string is empty", testName)
+	}
+}

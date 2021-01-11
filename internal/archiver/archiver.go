@@ -2,6 +2,7 @@ package archiver
 
 import (
 	"fmt"
+	"github.com/sa7mon/podarc/internal/id3"
 	"github.com/sa7mon/podarc/internal/interfaces"
 	"github.com/sa7mon/podarc/internal/utils"
 	"github.com/stvp/slug"
@@ -12,7 +13,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"github.com/sa7mon/podarc/internal/id3"
 )
 
 var concurrentDownloads = 2
