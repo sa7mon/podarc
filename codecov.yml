@@ -1,0 +1,2 @@
+ignore:
+  - "internal/id3/**/*"  # ignore folders and all its contents
