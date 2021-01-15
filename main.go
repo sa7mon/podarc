@@ -29,7 +29,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	credentials := utils.ReadCredentials("creds.json")
+	credentials, err := utils.ReadCredentials("creds.json")
+	if err != nil {
+		log.Println("Error reading creds file: " + err.Error())
+	}
 
 	fetchedPodcast, err := providers.FetchPodcastFromURL(*feedURL, credentials)
 	if err != nil {
