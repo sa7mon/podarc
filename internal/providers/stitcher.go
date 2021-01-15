@@ -2,6 +2,7 @@ package providers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/sa7mon/podarc/internal/interfaces"
 	"github.com/sa7mon/podarc/internal/utils"
@@ -175,7 +176,7 @@ func parseEpisodesFromResponse(response latestEpisodesResponse) []StitcherEpisod
 	return parsedEpisodes
 }
 
-func GetStitcherPodcastFeed(slug string, creds string) *StitcherPodcast {
+func GetStitcherPodcastFeed(slug string, creds string) (*StitcherPodcast, error) {
 	/*
 		The Stitcher API will return a practically unlimited number of episodes in a single page.
 		This method will fetch up to 10,000 episodes on one page. If more than 10,000 are returned,
@@ -194,14 +195,14 @@ func GetStitcherPodcastFeed(slug string, creds string) *StitcherPodcast {
 	req, err := http.NewRequest("GET", fmt.Sprintf(
 		"https://api.prod.stitcher.com/show/%s/latestEpisodes?count=10000&page=0", slug), nil)
 	if err != nil {
-		log.Fatal(err)
+		return &stitcherPod, err
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		return &stitcherPod, err
 	}
 	if resp.StatusCode != 200 {
-		log.Fatal("Bad status code while getting podcast - " + resp.Status)
+		return &stitcherPod, errors.New("bad status code while getting podcast - " + resp.Status)
 	}
 
 	firstPageResponse := &latestEpisodesResponse{}
@@ -209,14 +210,17 @@ func GetStitcherPodcastFeed(slug string, creds string) *StitcherPodcast {
 	jsonDecoder := json.NewDecoder(resp.Body)
 	err = jsonDecoder.Decode(firstPageResponse)
 	if err != nil {
-		log.Fatal(err)
+		return &stitcherPod, err
 	}
 
 	// The API doesn't currently have a page size limit. Fail here if that ever changes and we'll do proper paging.
 	if firstPageResponse.Orchestration.TotalCount > firstPageResponse.Orchestration.PageSize {
-		log.Fatal("Show has more than 1 page of episodes")
+		return &stitcherPod, errors.New("show has more than 1 page of episodes")
 	}
 
+	if len(firstPageResponse.Data.Shows) < 1 {
+		return &stitcherPod, errors.New("no shows found in API response")
+	}
 	// Set podcast description, feed URL, and episodes from the first page
 	stitcherPod.ShowDescription = firstPageResponse.Data.Shows[0].Description
 	stitcherPod.Feed = firstPageResponse.Data.Shows[0].StitcherLink
@@ -230,5 +234,5 @@ func GetStitcherPodcastFeed(slug string, creds string) *StitcherPodcast {
 	}
 	stitcherPod.Episodes = intEpisodes
 
-	return &stitcherPod
+	return &stitcherPod, nil
 }
