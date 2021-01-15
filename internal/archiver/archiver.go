@@ -2,7 +2,7 @@ package archiver
 
 import (
 	"fmt"
-	"github.com/sa7mon/podarc/internal/id3-go"
+	"github.com/sa7mon/podarc/internal/id3"
 	"github.com/sa7mon/podarc/internal/interfaces"
 	"github.com/sa7mon/podarc/internal/utils"
 	"github.com/stvp/slug"
