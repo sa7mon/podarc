@@ -45,6 +45,11 @@ func TestDownloadFileBadURL(t *testing.T) {
 	if err == nil {
 		t.Error("Invalid url didn't throw an error")
 	}
+	err = os.Remove("testfile.txt.tmp")
+	if err != nil {
+		fmt.Println("Couldn't delete test file")
+	}
+
 }
 
 func TestDownloadFileWithHeaders(t *testing.T) {
@@ -67,5 +72,4 @@ func TestDownloadFileWithHeaders(t *testing.T) {
 	if err != nil {
 		fmt.Println("Couldn't delete test file")
 	}
-
 }
