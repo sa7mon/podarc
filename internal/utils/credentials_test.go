@@ -33,6 +33,11 @@ func TestReadCredentials(t *testing.T) {
 	if err == nil {
 		t.Error("ReadCredentials didn't return an error when reading invalid file")
 	}
+
+	_, err = ReadCredentials("askdfjasdkjfaksjfsjakdf")
+	if err == nil {
+		t.Error("ReadCredentials didn't return an error when reading non-existent file")
+	}
 }
 
 func TestIsStitcherTokenValid(t *testing.T) {
