@@ -10,20 +10,20 @@ import (
 	Try to download a file whose size is known. Assert the files gets downloaded and is the known size.
  */
 func TestDownloadFile(t *testing.T) {
-	err := DownloadFile("test_file_1MB.zip", "http://speedtest.tele2.net/1MB.zip", nil, true)
+	err := DownloadFile("test_1KB.bin", "https://fastest.fish/lib/downloads/1KB.bin", nil, true)
 	if err != nil {
 		t.Error(err)
 	}
-	fi, err := os.Stat("test_file_1MB.zip")
+	fi, err := os.Stat("test_1KB.bin")
 	if err != nil {
 		t.Error(err)
 	}
 	// get the size
 	size := fi.Size()
-	if size != 1048576 {
-		t.Errorf("Expected size of downloaded file to be 1048576 got: %v", size)
+	if size != 8409 {
+		t.Errorf("Expected size of downloaded file to be 8409 got: %v", size)
 	}
-	err = os.Remove("test_file_1MB.zip")
+	err = os.Remove("test_1KB.bin")
 	if err != nil {
 		fmt.Println("Couldn't delete test file")
 	}
@@ -45,27 +45,31 @@ func TestDownloadFileBadURL(t *testing.T) {
 	if err == nil {
 		t.Error("Invalid url didn't throw an error")
 	}
+	err = os.Remove("testfile.txt.tmp")
+	if err != nil {
+		fmt.Println("Couldn't delete test file")
+	}
+
 }
 
 func TestDownloadFileWithHeaders(t *testing.T) {
 	headers := make(map[string]string, 1)
 	headers["User-Agent"] = "podarc_testing"
-	err := DownloadFile("test_file_1MB.zip", "http://speedtest.tele2.net/1MB.zip", headers, true)
+	err := DownloadFile("test_1KB_2.bin", "https://fastest.fish/lib/downloads/1KB.bin", headers, true)
 	if err != nil {
 		t.Error(err)
 	}
-	fi, err := os.Stat("test_file_1MB.zip")
+	fi, err := os.Stat("test_1KB_2.bin")
 	if err != nil {
 		t.Error(err)
 	}
 	// get the size
 	size := fi.Size()
-	if size != 1048576 {
-		t.Errorf("Expected size of downloaded file to be 1048576 got: %v", size)
+	if size != 8409 {
+		t.Errorf("Expected size of downloaded file to be 8409 got: %v", size)
 	}
-	err = os.Remove("test_file_1MB.zip")
+	err = os.Remove("test_1KB_2.bin")
 	if err != nil {
 		fmt.Println("Couldn't delete test file")
 	}
-
 }
