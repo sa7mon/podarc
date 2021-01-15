@@ -22,7 +22,7 @@ func AssertTypesAreEqual(t *testing.T, first interface{}, second interface{}) {
 
 func AssertEqual(t *testing.T, first interface{}, second interface{}) {
 	if first != second {
-		t.Errorf("%s and %s are not equal", first, second)
+		t.Errorf("'%s' and '%s' are not equal", first, second)
 	}
 }
 
