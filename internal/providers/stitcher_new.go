@@ -191,7 +191,7 @@ func GetStitcherNewPodcastFeed(slug string, creds string) *StitcherNewPodcast {
 
 	valid, reason := utils.IsStitcherTokenValid(creds)
 	if !valid {
-		log.Fatal("Bad Stitcher token: " + reason)
+		log.Println("WARNING Bad Stitcher token: " + reason)
 	}
 	stitcherPod := StitcherNewPodcast{}
 
