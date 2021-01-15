@@ -10,21 +10,62 @@ import (
 	Try to download a file whose size is known. Assert the files gets downloaded and is the known size.
  */
 func TestDownloadFile(t *testing.T) {
-	err := DownloadFile("test_file_10MB.zip", "http://speedtest.tele2.net/10MB.zip", nil, false)
+	err := DownloadFile("test_file_1MB.zip", "http://speedtest.tele2.net/1MB.zip", nil, true)
 	if err != nil {
 		t.Error(err)
 	}
-	fi, err := os.Stat("test_file_10MB.zip")
+	fi, err := os.Stat("test_file_1MB.zip")
 	if err != nil {
 		t.Error(err)
 	}
 	// get the size
 	size := fi.Size()
-	if size != 10485760 {
-		t.Errorf("Expected size of downloaded file to be 10485760 got: %v", size)
+	if size != 1048576 {
+		t.Errorf("Expected size of downloaded file to be 1048576 got: %v", size)
 	}
-	err = os.Remove("test_file_10MB.zip")
+	err = os.Remove("test_file_1MB.zip")
 	if err != nil {
 		fmt.Println("Couldn't delete test file")
 	}
+}
+
+/*
+	Make sure DownloadFile() throws an error when given an invalid filepath
+ */
+func TestDownloadFileBadPath(t *testing.T) {
+	err := DownloadFile("/,./&&&$$**", "https://my.site/file", nil, false)
+	if err == nil {
+		t.Error("Invalid filepath didn't throw an error")
+	}
+
+}
+
+func TestDownloadFileBadURL(t *testing.T) {
+	err := DownloadFile("testfile.txt", ")(*&^%$#@!@#%^&*()()", nil, false)
+	if err == nil {
+		t.Error("Invalid url didn't throw an error")
+	}
+}
+
+func TestDownloadFileWithHeaders(t *testing.T) {
+	headers := make(map[string]string, 1)
+	headers["User-Agent"] = "podarc_testing"
+	err := DownloadFile("test_file_1MB.zip", "http://speedtest.tele2.net/1MB.zip", headers, true)
+	if err != nil {
+		t.Error(err)
+	}
+	fi, err := os.Stat("test_file_1MB.zip")
+	if err != nil {
+		t.Error(err)
+	}
+	// get the size
+	size := fi.Size()
+	if size != 1048576 {
+		t.Errorf("Expected size of downloaded file to be 1048576 got: %v", size)
+	}
+	err = os.Remove("test_file_1MB.zip")
+	if err != nil {
+		fmt.Println("Couldn't delete test file")
+	}
+
 }
