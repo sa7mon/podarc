@@ -31,10 +31,6 @@ func (wc *WriteCounter) Write(p []byte) (int, error) {
 	return n, nil
 }
 
-func bytesToMegabytes(numBytes uint64) uint64 {
-	return numBytes / 100000000
-}
-
 func (wc WriteCounter) PrintProgress() {
 	// Clear the line by using a character return to go back to the start and remove
 	// the remaining characters by filling it with spaces
