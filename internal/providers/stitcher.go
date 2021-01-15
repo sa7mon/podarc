@@ -95,7 +95,7 @@ type StitcherPodcast struct {
 }
 
 type StitcherEpisode struct {
-	Id          string
+	ID          string
 	Image       string
 	Published   time.Time
 	Title       string
@@ -157,7 +157,7 @@ func parseEpisodesFromResponse(response latestEpisodesResponse) []StitcherEpisod
 	var parsedEpisodes []StitcherEpisode
 	for _, respEpisode := range response.Data.Episodes {
 		var newEpisode StitcherEpisode
-		newEpisode.Id = strconv.Itoa(respEpisode.ID)
+		newEpisode.ID = strconv.Itoa(respEpisode.ID)
 		newEpisode.Image = response.Data.Shows[0].ImageBaseURL
 		newEpisode.Published = time.Unix(respEpisode.DatePublished, 0)
 		newEpisode.Title = respEpisode.Title
