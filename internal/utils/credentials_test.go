@@ -21,9 +21,17 @@ type StitcherTokenPayload struct {
 }
 
 func TestReadCredentials(t *testing.T) {
-	testCreds := ReadCredentials("credentials_test.json")
+	testCreds, err := ReadCredentials("credentials_test.json")
+	if err != nil {
+		t.Errorf("Error reading creds file")
+	}
 	if testCreds.SessionToken != "abcd1234" {
 		t.Errorf("Session token wrong. Expected: %s , got: %s", "abcd1234", testCreds.SessionToken)
+	}
+
+	_, err = ReadCredentials("credentials_test.txt")
+	if err == nil {
+		t.Error("ReadCredentials didn't return an error when reading invalid file")
 	}
 }
 
@@ -60,6 +68,30 @@ func TestIsStitcherTokenValid(t *testing.T) {
 		AuthTime: 1609814570,
 		Iss: "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_asdf",
 		CognitoUsername: "asdf1234",
+		Exp: 1000000000, // Way in the past
+		Iat: 1609888545,
+		Email: "asdf@asdf.lol",
+	})
+	if err != nil {
+		t.Error(err)
+	}
+
+	expiredToken := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." + base64.URLEncoding.EncodeToString(j) +
+		".Z41mfxmgR0CsdXs_UTqddKMSwNlBqINHmxOWfdT7Vng"
+
+	expiredTokenIsValid, expiredTokenIsValidReason := IsStitcherTokenValid(expiredToken)
+	if expiredTokenIsValid || expiredTokenIsValidReason != "token is expired"  {
+		t.Errorf("Expired JWT was validated or reason was wrong: '%s'", expiredTokenIsValidReason)
+	}
+
+	j2, err := json.Marshal(StitcherTokenPayload{
+		Aud: "",
+		Sub: "",
+		CognitoGroups: []string{"Premium"},
+		EmailVerified: true,
+		AuthTime: 1609814570,
+		Iss: "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_asdf",
+		CognitoUsername: "asdf1234",
 		Exp: int(time.Now().Unix() + 300),   // 5 minutes from now
 		Iat: 1609888545,
 		Email: "asdf@asdf.lol",
@@ -68,7 +100,7 @@ func TestIsStitcherTokenValid(t *testing.T) {
 		t.Error(err)
 	}
 
-	goodToken := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." + base64.URLEncoding.EncodeToString(j) +
+	goodToken := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." + base64.URLEncoding.EncodeToString(j2) +
 				".Z41mfxmgR0CsdXs_UTqddKMSwNlBqINHmxOWfdT7Vng"
 
 	goodJWTisValid, goodJWTisValidReason := IsStitcherTokenValid(goodToken)

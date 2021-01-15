@@ -3,7 +3,6 @@ package utils
 import (
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"strings"
 	"time"
@@ -14,17 +13,17 @@ type Credentials struct {
 	StitcherNewToken string `json:"stitcher_new_token"`
 }
 
-func ReadCredentials(file string) Credentials {
+func ReadCredentials(file string) (Credentials, error) {
+	var creds Credentials
 	data, err := ioutil.ReadFile(file)
 	if err != nil {
-		fmt.Print(err)
+		return creds, err
 	}
-	var creds Credentials
 	err = json.Unmarshal(data, &creds)
 	if err != nil {
-		fmt.Println("Error reading creds file: ", err)
+		return creds, err
 	}
-	return creds
+	return creds, nil
 }
 
 func IsStitcherTokenValid(jwt string) (bool, string) {
