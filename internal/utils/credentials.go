@@ -30,11 +30,19 @@ func ReadCredentials(file string) Credentials {
 func IsStitcherTokenValid(jwt string) (bool, string) {
 	parts := strings.Split(jwt, ".")
 	if len(parts) != 3 {
+		fmt.Println("Didn't find 3 parts")
 		return false, "invalid JWT format"
 	}
 
-	payloadString, e := base64.StdEncoding.DecodeString(parts[1])
+	// Add padding if needed
+	segment := parts[1]
+	if l := len(segment) % 4; l > 0 {
+		segment += strings.Repeat("=", 4-l)
+	}
+
+	payloadString, e := base64.URLEncoding.DecodeString(segment)
 	if e != nil {
+		fmt.Println("Couldn't decode base64 string")
 		return false, "invalid JWT format"
 	}
 
