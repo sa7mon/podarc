@@ -114,7 +114,7 @@ func WriteID3TagsToFile(filePath string, episode interfaces.PodcastEpisode, podc
 		file.Close()
 		file, err = id3.Open(filePath, true)
 		if err != nil {
-			log.Println(err)
+			return err
 		}
 		defer file.Close()
 	}
