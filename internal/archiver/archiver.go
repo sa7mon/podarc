@@ -29,7 +29,11 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 			if renameFiles {
 				episodeFileName = GetEpisodeFileName(episode.GetURL(), episode) // Clean/normalize audio file name
 			} else {
-				episodeFileName = GetFileNameFromEpisodeURL(episode) // Leave file name as it is in the URL
+				episode, err := GetFileNameFromEpisodeURL(episode) // Leave file name as it is in the URL
+				if err != nil {
+					return err
+				}
+				episodeFileName = episode
 			}
 			episodePath := path.Join(destDirectory, episodeFileName)
 			if _, err := os.Stat(episodePath); os.IsNotExist(err) {
@@ -49,7 +53,11 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 		channel <- 1
 		go func(episodeToArchive interfaces.PodcastEpisode) error {
 			fileURL := episodeToArchive.GetURL()
-			episodePath := path.Join(destDirectory, GetFileNameFromEpisodeURL(episodeToArchive))
+			fileName, err := GetFileNameFromEpisodeURL(episodeToArchive)
+			if err != nil {
+				return err
+			}
+			episodePath := path.Join(destDirectory, fileName)
 
 			headers := make(map[string]string, 1)
 			if podcast.GetPublisher() == "Stitcher" {
@@ -60,7 +68,7 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 				headers["Authorization"] = "Bearer " + creds.StitcherNewToken
 			}
 			log.Printf("[%s] [archiver] Downloading episode '%s'...", podcast.GetTitle(), episodeToArchive.GetTitle())
-			err := utils.DownloadFile(episodePath, fileURL, headers, false)
+			err = utils.DownloadFile(episodePath, fileURL, headers, false)
 			if err != nil {
 				return err
 			}
@@ -152,13 +160,13 @@ func GetEpisodeFileName(episodeFile string, episode interfaces.PodcastEpisode) s
 	return newName
 }
 
-func GetFileNameFromEpisodeURL(episode interfaces.PodcastEpisode) string {
+func GetFileNameFromEpisodeURL(episode interfaces.PodcastEpisode) (string, error) {
 	parsed, err := url.Parse(episode.GetURL())
 	if err != nil {
-		log.Println(err)
+		return "", err
 	}
 
 	// url.Path returns the path portion of the URL (without query parameters)
 	// path.Base() returns everything after the final slash
-	return path.Base(parsed.Path)
+	return path.Base(parsed.Path), nil
 }
