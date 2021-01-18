@@ -19,7 +19,7 @@ func FetchPodcastFromURL(feedURL string, creds utils.Credentials) (interfaces.Po
 		libsynPod := GetLibsynProPodcastFeed(feedURL)
 		return libsynPod, nil
 	} else {
-		genericPod := GetGenericPodcastFeed(feedURL)
-		return genericPod, nil
+		genericPod, err := GetGenericPodcastFeed(feedURL)
+		return genericPod, err
 	}
 }
