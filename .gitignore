@@ -4,3 +4,5 @@ creds.json
 *.mp3
 temp/
 .DS_Store
+dev_notes.txt
+*.tmp
