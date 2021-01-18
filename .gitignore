@@ -5,3 +5,4 @@ creds.json
 temp/
 .DS_Store
 dev_notes.txt
+*.tmp
