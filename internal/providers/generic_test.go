@@ -17,6 +17,7 @@ func TestGenericUnmarshal(t *testing.T) {
 	}
 	test.AssertEqual(t, feed.GetTitle(), "Pod Save America")
 	test.AssertEqual(t, feed.GetPublisher(), "Crooked Media")
+	test.AssertNotEmpty(t, "feedDescription", feed.GetDescription())
 
 	firstEp := feed.GetEpisodes()[feed.NumEpisodes()-1]
 
