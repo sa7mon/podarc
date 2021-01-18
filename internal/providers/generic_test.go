@@ -1,6 +1,7 @@
 package providers
 
 import (
+	"fmt"
 	"github.com/sa7mon/podarc/test"
 	"testing"
 	"time"
@@ -54,4 +55,21 @@ func TestGetGenericPodcastFeed(t *testing.T) {
 	if err == nil {
 		t.Error("Trying to get empty podcast page didn't return an error")
 	}
+}
+
+func TestGenericEpisode_ToString(t *testing.T) {
+	title := "My Cool Episode"
+	description := "It's very cool!"
+	link := "https://my.cool.podcast/episode1"
+	imageLink := "https://my.cool.podcast/episode1.jpeg"
+	publishedDate := "2020-01-05 10:35:42"
+
+	g := GenericEpisode{Title: title, Description: description, PubDate: publishedDate}
+	g.Enclosure.URL = link
+	g.Image.Href = imageLink
+
+	expected := fmt.Sprintf("Title: %s | Description: %s | Url: %s | PublishedDate: " +
+		"%s | ImageUrl: %s", title, description, link, publishedDate, imageLink)
+
+	test.AssertString(t, "GenericEpisode_toString", expected, g.ToString())
 }
