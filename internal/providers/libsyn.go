@@ -2,9 +2,9 @@ package providers
 
 import (
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"github.com/sa7mon/podarc/internal/interfaces"
-	"log"
 	"net/http"
 	"time"
 )
@@ -94,28 +94,29 @@ func (l LibsynEpisode) ToString() string {
 		l.GetImageURL())
 }
 
-func GetLibsynProPodcastFeed(rssURL string) *LibsynPodcast {
+func GetLibsynProPodcastFeed(rssURL string) (*LibsynPodcast, error) {
+	podcast := &LibsynPodcast{}
+
 	client := &http.Client{
 		Timeout: 10 * time.Second,
 	}
 	req, err := http.NewRequest("GET", rssURL, nil)
 	if err != nil {
-		log.Fatal(err)
+		return podcast, err
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		return podcast, err
 	}
 	if resp.StatusCode != 200 {
-		log.Fatal("Bad status code while getting podcast - " + resp.Status)
+		return podcast, errors.New("Bad status code while getting podcast - " + resp.Status)
 	}
 
-	podcast := &LibsynPodcast{}
 
 	xmlDecoder := xml.NewDecoder(resp.Body)
 	err = xmlDecoder.Decode(podcast)
 	if err != nil {
-		log.Fatal(err)
+		return podcast, err
 	}
-	return podcast
+	return podcast, nil
 }

@@ -16,8 +16,8 @@ func FetchPodcastFromURL(feedURL string, creds utils.Credentials) (interfaces.Po
 	if len(stitcherMatches) > 0 {
 		return GetStitcherPodcastFeed(stitcherMatches[1], creds.StitcherNewToken)
 	} else if libSynMatches {
-		libsynPod := GetLibsynProPodcastFeed(feedURL)
-		return libsynPod, nil
+		libsynPod, err := GetLibsynProPodcastFeed(feedURL)
+		return libsynPod, err
 	} else {
 		genericPod, err := GetGenericPodcastFeed(feedURL)
 		return genericPod, err

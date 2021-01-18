@@ -10,7 +10,10 @@ import (
 
 func TestLibsynUnmarshal(t *testing.T) {
 	feedURL := "http://mates.nerdistind.libsynpro.com/rss"
-	fetchedPodcast := GetLibsynProPodcastFeed(feedURL)
+	fetchedPodcast, err := GetLibsynProPodcastFeed(feedURL)
+	if err != nil {
+		t.Error(err)
+	}
 
 	test.AssertString(t, "Podcast Title", "Mike and Tom Eat Snacks", fetchedPodcast.GetTitle())
 	test.AssertString(t, "Podcast Description","Michael Ian Black and Tom Cavanagh eat snacks and talk about it!", fetchedPodcast.GetDescription())
@@ -47,6 +50,19 @@ func TestFetchPodcastFromUrl(t *testing.T) {
 	}
 
 	test.AssertTypesAreEqual(t, p, &LibsynPodcast{})
+}
+
+func TestGetLibsynProPodcastFeed(t *testing.T) {
+	_, err := GetLibsynProPodcastFeed("https://httpbin.org/status/404")
+	if err == nil {
+		t.Error("Trying to get 404 podcast didn't return an error")
+	}
+
+	_, err = GetLibsynProPodcastFeed("https://httpbin.org/status/200")
+	if err == nil {
+		t.Error("Trying to get empty podcast page didn't return an error")
+	}
+
 }
 
 func TestLibSynEpisode_ToString(t *testing.T) {
