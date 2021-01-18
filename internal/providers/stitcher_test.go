@@ -31,8 +31,8 @@ func TestGetStitcherPodcastFeed(t *testing.T) {
 	}
 
 	// Test that the first episode's parsed published date is after Jan 01 2001
-	jan1_layout := "Mon, 02 Jan 2006 15:04:05 -0700" // Mon Jan 2 15:04:05 MST 2006
-	jan1, err := time.Parse(jan1_layout, "Sun, 01 Jan 2001 01:01:01 -0000")
+	jan1Layout := "Mon, 02 Jan 2006 15:04:05 -0700" // Mon Jan 2 15:04:05 MST 2006
+	jan1, err := time.Parse(jan1Layout, "Sun, 01 Jan 2001 01:01:01 -0000")
 	if err != nil {
 		t.Error("Couldn't get test date ready: " + err.Error())
 	}
