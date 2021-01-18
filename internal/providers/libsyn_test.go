@@ -26,8 +26,8 @@ func TestLibsynUnmarshal(t *testing.T) {
 	test.AssertString(t, "Episode Published Date", "Mon, 05 Mar 2012 08:00:00 +0000", firstEpisode.GetPublishedDate())
 	test.AssertString(t, "Episode Image URL", "http://static.libsyn.com/p/assets/8/d/b/d/8dbd7e032866e1a8/MATES_logo.jpg", firstEpisode.GetImageURL())
 
-	jan_1_layout := "Mon, 02 Jan 2006 15:04:05 -0700" // Mon Jan 2 15:04:05 MST 2006
-	jan_1, err := time.Parse(jan_1_layout, "Mon, 01 Jan 2001 01:01:01 -0000")
+	jan1_layout := "Mon, 02 Jan 2006 15:04:05 -0700" // Mon Jan 2 15:04:05 MST 2006
+	jan1, err := time.Parse(jan1_layout, "Mon, 01 Jan 2001 01:01:01 -0000")
 	if err != nil {
 		t.Error("Couldn't get test date ready: " + err.Error())
 	}
@@ -37,7 +37,7 @@ func TestLibsynUnmarshal(t *testing.T) {
 		t.Error(err)
 	}
 
-	if !firstEpPubDate.After(jan_1) {
+	if !firstEpPubDate.After(jan1) {
 		t.Error("Latest episode's parsed published date was not after Jan 1 2001: " + firstEpPubDate.String())
 	}
 }
