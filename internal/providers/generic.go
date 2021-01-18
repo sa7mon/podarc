@@ -2,8 +2,9 @@ package providers
 
 import (
 	"encoding/xml"
+	"errors"
+	"fmt"
 	"github.com/sa7mon/podarc/internal/interfaces"
-	"log"
 	"net/http"
 	"time"
 )
@@ -140,10 +141,12 @@ func (e GenericEpisode) GetImageURL() string {
 }
 
 func (e GenericEpisode) ToString() string {
-	panic("implement me")
+	return fmt.Sprintf("Title: %s | Description: %s | Url: %s | PublishedDate: " +
+		"%s | ImageUrl: %s", e.GetTitle(), e.GetDescription(), e.GetURL(), e.GetPublishedDate(),
+		e.GetImageURL())
 }
 
-func GetGenericPodcastFeed(url string) *GenericPodcast {
+func GetGenericPodcastFeed(url string) (*GenericPodcast, error) {
 	podcast := GenericPodcast{}
 
 	client := &http.Client{
@@ -151,20 +154,20 @@ func GetGenericPodcastFeed(url string) *GenericPodcast {
 	}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		log.Fatal(err)
+		return &podcast, err
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		return &podcast, err
 	}
 	if resp.StatusCode != 200 {
-		log.Fatal("Bad status code while getting podcast - " + resp.Status)
+		return &podcast, errors.New("Bad status code while getting podcast - " + resp.Status)
 	}
 
 	xmlDecoder := xml.NewDecoder(resp.Body)
 	err = xmlDecoder.Decode(&podcast)
 	if err != nil {
-		log.Fatal(err)
+		return &podcast, err
 	}
 
 	episodes := make([]interfaces.PodcastEpisode, len(podcast.Channel.Items))
@@ -173,5 +176,5 @@ func GetGenericPodcastFeed(url string) *GenericPodcast {
 	}
 	podcast.Episodes = episodes
 
-	return &podcast
+	return &podcast, nil
 }
