@@ -36,24 +36,6 @@ func (c ArchiveConsumer) Work(wg *sync.WaitGroup, termChan chan error, podcast i
 								destDirectory string, creds utils.Credentials, renameFiles bool) {
 	defer wg.Done()
 	for episode := range c.jobs {
-		//fmt.Printf("Starting processing on: %s \n", job)
-		//if job == "e" {
-		//	termChan <- errors.New("found bad item to process")
-		//	wg.Done()
-		//	return
-		//}
-		//d := time.Duration(rand.Intn(10)) * time.Second
-		//time.Sleep(d)
-		//fmt.Printf("Done processing on: %s \n", job)
-
-		fmt.Printf("[debug] destDirectory: %v", destDirectory)
-
-		//if _, err := os.Stat(episodePath); os.IsNotExist(err) {
-		//	episodesToArchive = append(episodesToArchive, episode)
-		//}
-
-
-
 		fileURL := episode.GetURL()
 		fileName, err := GetFileNameFromEpisodeURL(episode)
 		if err != nil {
@@ -72,7 +54,7 @@ func (c ArchiveConsumer) Work(wg *sync.WaitGroup, termChan chan error, podcast i
 			headers["Authorization"] = "Bearer " + creds.StitcherNewToken
 		}
 		log.Printf("[%s] [archiver] Downloading episode '%s'...", podcast.GetTitle(), episode.GetTitle())
-		err := utils.DownloadFile(episodePath, fileURL, headers, false)
+		err = utils.DownloadFile(episodePath, fileURL, headers, false)
 		if err != nil {
 			termChan <- err
 			wg.Done()
@@ -87,10 +69,7 @@ func (c ArchiveConsumer) Work(wg *sync.WaitGroup, termChan chan error, podcast i
 			return
 		}
 		if renameFiles {
-			fmt.Printf("[debug] [archiver] Renaming downloaded file from '%v' to '%v' \n", episodePath,
-				GetEpisodeFileName(episodePath, episode))
-
-			err = os.Rename(episodePath, GetEpisodeFileName(episodePath, episode))
+			err = os.Rename(episodePath, path.Join(destDirectory, GetEpisodeFileName(episodePath, episode)))
 			if err != nil {
 				termChan <- err
 				wg.Done()
@@ -103,7 +82,6 @@ func (c ArchiveConsumer) Work(wg *sync.WaitGroup, termChan chan error, podcast i
 		//log.Printf("[%s] [archiver] (%d/%d) archived episode: '%s'", podcast.GetTitle(), archivedEpisodes,
 		//	len(episodesToArchive), episode.GetTitle())
 		log.Printf("[%s] [archiver] archived episode: '%s'", podcast.GetTitle(), episode.GetTitle())
-
 	}
 }
 
@@ -130,6 +108,7 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 	creds utils.Credentials) error {
 	var episodesToArchive []interfaces.PodcastEpisode
 
+	log.Printf("[%s] [archiver] Found %d total episodes", podcast.GetTitle(), len(podcast.GetEpisodes()))
 	for _, episode := range podcast.GetEpisodes() {
 		if overwriteExisting {
 			episodesToArchive = append(episodesToArchive, episode)
@@ -150,7 +129,6 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 			}
 		}
 	}
-	log.Printf("[%s] [archiver] Found %d total episodes", podcast.GetTitle(), len(podcast.GetEpisodes()))
 	log.Printf("[%s] [archiver] Found %d episodes to archive", podcast.GetTitle(), len(episodesToArchive))
 
 	//archivedEpisodes := 0
