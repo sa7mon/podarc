@@ -2,14 +2,12 @@ package archiver
 
 import (
 	"context"
-	//"errors"
 	"fmt"
 	"github.com/sa7mon/podarc/internal/id3"
 	"github.com/sa7mon/podarc/internal/interfaces"
 	"github.com/sa7mon/podarc/internal/utils"
 	"github.com/stvp/slug"
 	"log"
-	//"math/rand"
 	"net/url"
 	"os"
 	"path"
@@ -18,10 +16,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	//"time"
 )
-
-//var concurrentDownloads = 2
 
 type ArchiveConsumer struct {
 	in *chan interfaces.PodcastEpisode
@@ -32,8 +27,14 @@ type ArchiveProducer struct {
 	in *chan interfaces.PodcastEpisode
 }
 
+type ArchiveState struct {
+	archivedCount 	uint32
+	toArchiveCount 	uint32
+}
+
 func (c ArchiveConsumer) Work(wg *sync.WaitGroup, termChan chan error, podcast interfaces.Podcast,
-								destDirectory string, creds utils.Credentials, renameFiles bool) {
+								destDirectory string, creds utils.Credentials, renameFiles bool,
+								state *ArchiveState, stateMutex *sync.Mutex) {
 	defer wg.Done()
 	for episode := range c.jobs {
 		fileURL := episode.GetURL()
@@ -75,13 +76,13 @@ func (c ArchiveConsumer) Work(wg *sync.WaitGroup, termChan chan error, podcast i
 				wg.Done()
 				return
 			}
-			//return nil
 		}
-		//archivedEpisodes++
-		//fmt.Printf("\r")
-		//log.Printf("[%s] [archiver] (%d/%d) archived episode: '%s'", podcast.GetTitle(), archivedEpisodes,
-		//	len(episodesToArchive), episode.GetTitle())
-		log.Printf("[%s] [archiver] archived episode: '%s'", podcast.GetTitle(), episode.GetTitle())
+
+		stateMutex.Lock()
+		state.archivedCount++
+		log.Printf("[%s] [archiver] (%d/%d) archived episode: '%s'", podcast.GetTitle(), state.archivedCount,
+			state.toArchiveCount, episode.GetTitle())
+		stateMutex.Unlock()
 	}
 }
 
@@ -131,14 +132,16 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 	}
 	log.Printf("[%s] [archiver] Found %d episodes to archive", podcast.GetTitle(), len(episodesToArchive))
 
-	//archivedEpisodes := 0
-	// For each episode not currently downloaded - download it.
-
+	// Setup producers/consumers
 	const nConsumers = 2
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	in := make(chan interfaces.PodcastEpisode, 1)
 	p := ArchiveProducer{&in}
 	c := ArchiveConsumer{&in, make(chan interfaces.PodcastEpisode, nConsumers)}
+
+	// Instantiate a thread-safe state object
+	archiveState := ArchiveState{archivedCount: 0, toArchiveCount: uint32(len(episodesToArchive))}
+	stateMutex := &sync.Mutex{}
 
 	termChan := make(chan error)
 
@@ -150,7 +153,7 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 	wg := &sync.WaitGroup{}
 	wg.Add(nConsumers)
 	for i := 0; i < nConsumers; i++ {
-		go c.Work(wg, termChan, podcast, destDirectory, creds, renameFiles)
+		go c.Work(wg, termChan, podcast, destDirectory, creds, renameFiles, &archiveState, stateMutex)
 	}
 
 	var errorWhileProcessing error
