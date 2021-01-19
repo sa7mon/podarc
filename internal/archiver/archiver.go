@@ -1,8 +1,11 @@
+/*
+	Much of the consumer-producer pattern code copied from: https://medium.com/hdac/producer-consumer-pattern-implementation-with-golang-6ac412cf941c
+*/
+
 package archiver
 
 import (
 	"context"
-	"fmt"
 	"github.com/sa7mon/podarc/internal/id3"
 	"github.com/sa7mon/podarc/internal/interfaces"
 	"github.com/sa7mon/podarc/internal/utils"
@@ -27,6 +30,10 @@ type ArchiveProducer struct {
 	in *chan interfaces.PodcastEpisode
 }
 
+/*
+	State to pass to each consumer
+	Only access after locking the sync.Mutex to ensure thread safety
+ */
 type ArchiveState struct {
 	archivedCount 	uint32
 	toArchiveCount 	uint32
@@ -147,7 +154,7 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 
 	go p.Produce(episodesToArchive, termChan)
 
-	ctx, cancelFunc := context.WithCancel(context.Background())
+	ctx, cancelFunc := context.WithCancel(context.Background()) // Unsure what this is doing for us. Investigate/delete
 	go c.Consume(ctx)
 
 	wg := &sync.WaitGroup{}
@@ -161,20 +168,21 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 	cancelFunc()
 	wg.Wait()
 
-	if errorWhileProcessing != nil {
-		fmt.Println("Caught error while processing: " + errorWhileProcessing.Error())
-	}
-
-	return nil
+	return errorWhileProcessing
 }
 
+/*
+	Contains a hacky workaround because the library doesn't support deleting ID3v1 tags.
+	We need to use ID3v2 because v1 has a 30-character limit on the title field (and likely others).
+	If the file has v1 tags, re-open forcing v2 tags which effectively erases all existing tags
+	that we don't set here.
+
+	TODO:
+		- Set date recorded
+		- Save podcast publisher to one of the tags
+		- Set cover image
+*/
 func WriteID3TagsToFile(filePath string, episode interfaces.PodcastEpisode, podcast interfaces.Podcast) error {
-	/*
-		Contains a hacky workaround because the library doesn't support deleting ID3v1 tags.
-		We need to use ID3v2 because v1 has a 30-character limit on the title field (and likely others).
-		If the file has v1 tags, re-open forcing v2 tags which effectively erases all existing tags
-		that we don't set here.
-	*/
 
 	file, err := id3.Open(filePath, false)
 	if err != nil {
@@ -234,6 +242,11 @@ func GetEpisodeFileName(episodeFile string, episode interfaces.PodcastEpisode) s
 	return newName
 }
 
+/*
+	Returns the file name from an episode URL.
+
+	Example: "https://my.site/podcast/episode1.mp3?asdf=1" -> "episode1.mp3"
+ */
 func GetFileNameFromEpisodeURL(episode interfaces.PodcastEpisode) (string, error) {
 	parsed, err := url.Parse(episode.GetURL())
 	if err != nil {
