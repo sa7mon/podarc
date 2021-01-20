@@ -88,7 +88,7 @@ func Work(state *State, wg *sync.WaitGroup, workerID int, podcast interfaces.Pod
 		episode := state.queue.Get()
 		state.mutex.Unlock()
 		if episode == nil {
-			fmt.Printf("[worker%v] No work to do. Exiting\n", workerID)
+			//fmt.Printf("[worker%v] No work to do. Exiting\n", workerID)
 			wg.Done()
 			return
 		}
