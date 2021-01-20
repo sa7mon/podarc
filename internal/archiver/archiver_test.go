@@ -120,15 +120,33 @@ func TestArchiveStitcherPodcast(t *testing.T) {
 	if err == nil {
 		t.Error("No error returned when trying to archive a Stitcher podcast with bad creds")
 	}
+
+	testPod2 := providers.GenericPodcast{}
+	testPod2.Channel.Title = "My Cool Stitcher Podcast"
+	testPod2.Channel.Author = "ASDF"
+
+	ep2 := providers.GenericEpisode{}
+	ep2.Enclosure.URL = "{}[]_=__++!@#$%A^&*()()()"
+	testPod2.Episodes = append(testPod2.Episodes, ep2)
+
+	err = ArchivePodcast(testPod2, "./", false, true, utils.Credentials{})
+	if err == nil {
+		t.Error("Bad episode URL didn't return an error")
+	}
+
 }
 
 func TestQueue(t *testing.T) {
 	episode1 := providers.GenericEpisode{Title: "My Cool Episode"}
+	q := NewQueue([]interfaces.PodcastEpisode{episode1})
+	test.AssertEqual(t, q.String(), "[{ My Cool Episode          { } {   } { }  }]")
+
 	episode2 := providers.GenericEpisode{Title: "My Cool Episode2"}
 	episode3 := providers.GenericEpisode{Title: "My Cool Episode3"}
 	episode4 := providers.GenericEpisode{Title: "My Cool Episode3"}
 
-	q := NewQueue([]interfaces.PodcastEpisode{episode1, episode2, episode3})
+	q.Add(episode2)
+	q.Add(episode3)
 	test.AssertEqual(t, q.Length(), 3)
 
 	test.AssertString(t, "queueItem",  "Title: My Cool Episode | Description:  | Url:  | PublishedDate:  | ImageUrl: ", q.items[0].ToString())
