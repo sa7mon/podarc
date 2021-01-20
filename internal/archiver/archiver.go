@@ -5,7 +5,8 @@
 package archiver
 
 import (
-	"context"
+	"errors"
+	"fmt"
 	"github.com/sa7mon/podarc/internal/id3"
 	"github.com/sa7mon/podarc/internal/interfaces"
 	"github.com/sa7mon/podarc/internal/utils"
@@ -21,15 +22,6 @@ import (
 	"sync"
 )
 
-type ArchiveConsumer struct {
-	in *chan interfaces.PodcastEpisode
-	jobs chan interfaces.PodcastEpisode
-}
-
-type ArchiveProducer struct {
-	in *chan interfaces.PodcastEpisode
-}
-
 /*
 	State to pass to each consumer
 	Only access after locking the sync.Mutex to ensure thread safety
@@ -39,15 +31,74 @@ type ArchiveState struct {
 	toArchiveCount 	uint32
 }
 
-func (c ArchiveConsumer) Work(wg *sync.WaitGroup, termChan chan error, podcast interfaces.Podcast,
-								destDirectory string, creds utils.Credentials, renameFiles bool,
-								state *ArchiveState, stateMutex *sync.Mutex) {
-	defer wg.Done()
-	for episode := range c.jobs {
+type State struct {
+	mutex 				sync.Mutex
+	queue 				Queue
+	err 				error
+	archivedCount 		uint32
+	totalToArchiveCount uint32
+}
+
+/*
+	FIFO queue
+*/
+type Queue struct {
+	items []interfaces.PodcastEpisode
+}
+
+func (q Queue) String() string {
+	return fmt.Sprintf("%v", q.items)
+}
+
+/*
+	Constructor
+*/
+func NewQueue(initial []interfaces.PodcastEpisode) Queue {
+	return Queue{items: initial}
+}
+
+func (q *Queue) Add(item interfaces.PodcastEpisode) {
+	q.items = append(q.items, item)
+}
+
+func (q *Queue) Get() interfaces.PodcastEpisode {
+	if len(q.items) == 0 {
+		return nil
+	}
+	popped := q.items[0]  // Get top element
+	q.items = q.items[1:] // Remove top element
+	return popped
+}
+
+func (q *Queue) Length() int {
+	return len(q.items)
+}
+
+func Work(state *State, wg *sync.WaitGroup, workerID int, podcast interfaces.Podcast, destDirectory string,
+			renameFiles bool, creds utils.Credentials) {
+	for {
+		// Get work to do
+		state.mutex.Lock()
+		if state.err != nil {
+			// Error happened somewhere - kill this thread
+			state.mutex.Unlock()
+			wg.Done()
+			return
+		}
+		episode := state.queue.Get()
+		state.mutex.Unlock()
+		if episode == nil {
+			//fmt.Printf("[worker%v] No work to do. Exiting\n", workerID)
+			wg.Done()
+			return
+		}
+
 		fileURL := episode.GetURL()
 		fileName, err := GetFileNameFromEpisodeURL(episode)
 		if err != nil {
-			termChan <- err
+			state.mutex.Lock()
+			state.err = err
+			state.mutex.Unlock()
 			wg.Done()
 			return
 		}
@@ -57,59 +108,51 @@ func (c ArchiveConsumer) Work(wg *sync.WaitGroup, termChan chan error, podcast i
 		if podcast.GetPublisher() == "Stitcher" {
 			valid, reason := utils.IsStitcherTokenValid(creds.StitcherNewToken)
 			if !valid {
-				log.Fatal("Bad Stitcher token: " + reason)
+				state.mutex.Lock()
+				state.err = errors.New("Bad Stitcher token: " + reason)
+				state.mutex.Unlock()
+				wg.Done()
+				return
 			}
 			headers["Authorization"] = "Bearer " + creds.StitcherNewToken
 		}
 		log.Printf("[%s] [archiver] Downloading episode '%s'...", podcast.GetTitle(), episode.GetTitle())
 		err = utils.DownloadFile(episodePath, fileURL, headers, false)
 		if err != nil {
-			termChan <- err
+			state.mutex.Lock()
+			state.err = err
+			state.mutex.Unlock()
 			wg.Done()
 			return
-
 		}
 		// Write ID3 tags to file
 		err = WriteID3TagsToFile(episodePath, episode, podcast)
 		if err != nil {
-			termChan <- err
+			state.mutex.Lock()
+			state.err = err
+			state.mutex.Unlock()
 			wg.Done()
 			return
 		}
+
 		if renameFiles {
 			err = os.Rename(episodePath, path.Join(destDirectory, GetEpisodeFileName(episodePath, episode)))
 			if err != nil {
-				termChan <- err
+				state.mutex.Lock()
+				state.err = err
+				state.mutex.Unlock()
 				wg.Done()
 				return
 			}
 		}
 
-		stateMutex.Lock()
+		state.mutex.Lock()
 		state.archivedCount++
 		log.Printf("[%s] [archiver] (%d/%d) archived episode: '%s'", podcast.GetTitle(), state.archivedCount,
-			state.toArchiveCount, episode.GetTitle())
-		stateMutex.Unlock()
+			state.totalToArchiveCount, episode.GetTitle())
+		state.mutex.Unlock()
 	}
-}
 
-func (c ArchiveConsumer) Consume(ctx context.Context) {
-	for {
-		select {
-		case job := <-*c.in:
-			c.jobs <- job
-		case <-ctx.Done():
-			close(c.jobs)
-			return
-		}
-	}
-}
-
-func (p ArchiveProducer) Produce(items []interfaces.PodcastEpisode, termChan chan error) {
-	for _, item := range items {
-		*p.in <- item
-	}
-	termChan <- nil
 }
 
 func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteExisting bool, renameFiles bool,
@@ -142,33 +185,19 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 	// Setup producers/consumers
 	const nConsumers = 2
 	runtime.GOMAXPROCS(runtime.NumCPU())
-	in := make(chan interfaces.PodcastEpisode, 1)
-	p := ArchiveProducer{&in}
-	c := ArchiveConsumer{&in, make(chan interfaces.PodcastEpisode, nConsumers)}
 
 	// Instantiate a thread-safe state object
-	archiveState := ArchiveState{archivedCount: 0, toArchiveCount: uint32(len(episodesToArchive))}
-	stateMutex := &sync.Mutex{}
-
-	termChan := make(chan error)
-
-	go p.Produce(episodesToArchive, termChan)
-
-	ctx, cancelFunc := context.WithCancel(context.Background()) // Unsure what this is doing for us. Investigate/delete
-	go c.Consume(ctx)
+	archiveState := &State{err: nil, queue: NewQueue(episodesToArchive),
+							totalToArchiveCount: uint32(len(episodesToArchive))}
 
 	wg := &sync.WaitGroup{}
 	wg.Add(nConsumers)
 	for i := 0; i < nConsumers; i++ {
-		go c.Work(wg, termChan, podcast, destDirectory, creds, renameFiles, &archiveState, stateMutex)
+		go Work(archiveState, wg, i, podcast, destDirectory, renameFiles, creds)
 	}
 
-	var errorWhileProcessing error
-	errorWhileProcessing = <- termChan
-	cancelFunc()
 	wg.Wait()
-
-	return errorWhileProcessing
+	return archiveState.err
 }
 
 /*
