@@ -94,5 +94,30 @@ func TestArchivePodcast(t *testing.T) {
 	if err != nil {
 		fmt.Println("Couldn't delete test file: " + err.Error())
 	}
+}
 
+func TestArchiveStitcherPodcast(t *testing.T) {
+	testPod := providers.GenericPodcast{}
+	testPod.Channel.Title = "My Cool Stitcher Podcast"
+	testPod.Channel.Author = "Stitcher"
+	testPod.Episodes = []interfaces.PodcastEpisode{}
+
+	testEpisode := providers.GenericEpisode{
+		Title:   "My Test Episode",
+		PubDate: "Mon, 02 Jan 2006 15:04:05 -0700",
+	}
+	testEpisode.Enclosure.URL = "https://my.fake.site/testArchiveStitcherPodcast.mp3"
+	testEpisode2 := providers.GenericEpisode{
+		Title:   "My Test Episode2",
+		PubDate: "Mon, 02 Jan 2006 15:04:05 -0700",
+	}
+	testEpisode2.Enclosure.URL = "https://my.fake.site/testArchiveStitcherPodcast2.mp3"
+
+	testPod.Episodes = append(testPod.Episodes, testEpisode)
+	testPod.Episodes = append(testPod.Episodes, testEpisode2)
+
+	err := ArchivePodcast(testPod, "./", false, true, utils.Credentials{StitcherNewToken: "asdf123"})
+	if err == nil {
+		t.Error("No error returned when trying to archive a Stitcher podcast with bad creds")
+	}
 }
