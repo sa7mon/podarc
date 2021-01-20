@@ -90,7 +90,7 @@ func TestArchivePodcast(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	err = os.Remove("1KB.bin.tmp")
+	err = os.Remove("2006-01-02_my-test-episode.bin")
 	if err != nil {
 		fmt.Println("Couldn't delete test file: " + err.Error())
 	}

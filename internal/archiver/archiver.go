@@ -74,61 +74,6 @@ func (q *Queue) Length() int {
 	return len(q.items)
 }
 
-
-//func (c ArchiveConsumer) WorkOld(wg *sync.WaitGroup, termChan chan error, podcast interfaces.Podcast,
-//								destDirectory string, creds utils.Credentials, renameFiles bool,
-//								state *ArchiveState, stateMutex *sync.Mutex) {
-//	defer wg.Done()
-//	for episode := range c.jobs {
-//		fileURL := episode.GetURL()
-//		fileName, err := GetFileNameFromEpisodeURL(episode)
-//		if err != nil {
-//			termChan <- err
-//			wg.Done()
-//			return
-//		}
-//		episodePath := path.Join(destDirectory, fileName)
-//
-//		headers := make(map[string]string, 1)
-//		if podcast.GetPublisher() == "Stitcher" {
-//			valid, reason := utils.IsStitcherTokenValid(creds.StitcherNewToken)
-//			if !valid {
-//				log.Fatal("Bad Stitcher token: " + reason)
-//			}
-//			headers["Authorization"] = "Bearer " + creds.StitcherNewToken
-//		}
-//		log.Printf("[%s] [archiver] Downloading episode '%s'...", podcast.GetTitle(), episode.GetTitle())
-//		err = utils.DownloadFile(episodePath, fileURL, headers, false)
-//		if err != nil {
-//			termChan <- err
-//			wg.Done()
-//			return
-//
-//		}
-//		// Write ID3 tags to file
-//		err = WriteID3TagsToFile(episodePath, episode, podcast)
-//		if err != nil {
-//			termChan <- err
-//			wg.Done()
-//			return
-//		}
-//		if renameFiles {
-//			err = os.Rename(episodePath, path.Join(destDirectory, GetEpisodeFileName(episodePath, episode)))
-//			if err != nil {
-//				termChan <- err
-//				wg.Done()
-//				return
-//			}
-//		}
-//
-//		stateMutex.Lock()
-//		state.archivedCount++
-//		log.Printf("[%s] [archiver] (%d/%d) archived episode: '%s'", podcast.GetTitle(), state.archivedCount,
-//			state.toArchiveCount, episode.GetTitle())
-//		stateMutex.Unlock()
-//	}
-//}
-
 func Work(state *State, wg *sync.WaitGroup, workerID int, podcast interfaces.Podcast, destDirectory string,
 			renameFiles bool, creds utils.Credentials) {
 	for {
