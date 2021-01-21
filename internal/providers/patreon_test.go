@@ -57,6 +57,11 @@ func TestPatreonStruct(t *testing.T) {
 		t.Error(err)
 	}
 
-	test.AssertEqual(t, expectedPubTime, actualPubTime)
+	if expectedPubTime != actualPubTime {
+		t.Error("Published time wrong. Expected: '" + expectedPubTime.String() + "', got: '" + actualPubTime.String() + "'")
+	}
+
 	test.AssertString(t, "toString()", "Title: My cool ep | Description: This is a nice ep! | Url: https://asdf.lol/myep.mp3 | PublishedDate: Tue, 03 Jan 2006 11:04:05 CST | ImageUrl: https://asdf.lol/cover.jpeg", patreonEp.ToString())
+
+
 }
