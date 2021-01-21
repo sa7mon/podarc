@@ -28,4 +28,10 @@ func TestFetchPodcastFromURL(t *testing.T) {
 	}
 	test.AssertEqual(t, stitcher.GetPublisher(), "Stitcher")
 	test.AssertEqual(t, stitcher.GetTitle(), "Comedy Bang Bang: The Podcast")
+
+	_, err = FetchPodcastFromURL("https://www.patreon.com/rss/asdfasdf1234", utils.Credentials{})
+	if err == nil {
+		t.Error("404 Patreon feed didn't return an error")
+	}
+
 }
