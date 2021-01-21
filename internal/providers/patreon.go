@@ -7,6 +7,7 @@ import (
 	"github.com/sa7mon/podarc/internal/interfaces"
 	"html"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -131,6 +132,10 @@ func (p PatreonEpisode) GetGUID() string {
 
 func GetPatreonPodcastFeed(feedURL string) (*PatreonPodcast, error) {
 	podcast := &PatreonPodcast{}
+
+	if strings.Contains(feedURL, "?auth=") {
+		return podcast, errors.New("patreon URL is missing auth parameter")
+	}
 
 	client := &http.Client{
 		Timeout: 10 * time.Second,
