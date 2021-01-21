@@ -62,7 +62,7 @@ type PatreonEpisode struct {
 		Length string `xml:"length,attr"`
 		Type   string `xml:"type,attr"`
 	} `xml:"enclosure"`
-	Guid struct {
+	GUID struct {
 		Text        string `xml:",chardata"`
 		IsPermaLink string `xml:"isPermaLink,attr"`
 	} `xml:"guid"`
@@ -127,7 +127,7 @@ func (p PatreonPodcast) GetPublisher() string {
 }
 
 func (p PatreonEpisode) GetGUID() string {
-	return p.Guid.Text
+	return p.GUID.Text
 }
 
 func GetPatreonPodcastFeed(feedURL string) (*PatreonPodcast, error) {
