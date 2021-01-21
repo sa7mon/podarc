@@ -4,6 +4,7 @@ import (
 	"github.com/sa7mon/podarc/internal/interfaces"
 	"github.com/sa7mon/podarc/test"
 	"testing"
+	"time"
 )
 
 func TestGetPatreonPodcastFeed(t *testing.T) {
@@ -28,6 +29,7 @@ func TestPatreonStruct(t *testing.T) {
 	patreonEp.Enclosure.URL = "https://asdf.lol/myep.mp3"
 	patreonEp.GUID.Text = "asdf1234"
 	patreonEp.ImageURL = "https://asdf.lol/cover.jpeg"
+	patreonEp.PubDate = "Tue, 03 Jan 2006 11:04:05 CST"
 
 	patreonPod.Episodes = []interfaces.PodcastEpisode{patreonEp}
 
@@ -40,4 +42,21 @@ func TestPatreonStruct(t *testing.T) {
 	test.AssertEqual(t, patreonPod.GetPublisher(), "Patreon")
 	test.AssertEqual(t, patreonEp.GetGUID(), "asdf1234")
 	test.AssertEqual(t, patreonEp.GetImageURL(), "https://asdf.lol/cover.jpeg")
+	test.AssertEqual(t, patreonEp.GetTitle(), "My cool ep")
+	test.AssertEqual(t, patreonEp.GetDescription(), "This is a nice ep!")
+	test.AssertEqual(t, patreonEp.GetURL(), "https://asdf.lol/myep.mp3")
+	test.AssertEqual(t, patreonEp.GetPublishedDate(), "Tue, 03 Jan 2006 11:04:05 CST")
+
+	expectedPubTime, err := time.Parse("Mon, 02 Jan 2006 15:04:05 MST", "Tue, 03 Jan 2006 11:04:05 CST")
+	if err != nil {
+		t.Error("Error creating test time: " + err.Error())
+	}
+
+	actualPubTime, err := patreonEp.GetParsedPublishedDate()
+	if err != nil {
+		t.Error(err)
+	}
+
+	test.AssertEqual(t, expectedPubTime, actualPubTime)
+	test.AssertString(t, "toString()", "Title: My cool ep | Description: This is a nice ep! | Url: https://asdf.lol/myep.mp3 | PublishedDate: Tue, 03 Jan 2006 11:04:05 CST | ImageUrl: https://asdf.lol/cover.jpeg", patreonEp.ToString())
 }
