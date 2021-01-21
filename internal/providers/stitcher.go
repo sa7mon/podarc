@@ -147,6 +147,10 @@ func (e StitcherEpisode) GetParsedPublishedDate() (time.Time, error) {
 	return e.Published, nil
 }
 
+func (e StitcherEpisode) GetGUID() string {
+	return e.ID
+}
+
 func (e StitcherEpisode) ToString() string {
 	return fmt.Sprintf("Title: %s | Description: %s | Url: %s | PublishedDate: " +
 		"%s | ImageUrl: %s", e.GetTitle(), e.GetDescription(), e.GetURL(), e.GetPublishedDate(),

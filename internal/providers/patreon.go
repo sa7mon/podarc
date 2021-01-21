@@ -125,6 +125,10 @@ func (p PatreonPodcast) GetPublisher() string {
 	return "Patreon"
 }
 
+func (p PatreonEpisode) GetGUID() string {
+	return p.Guid.Text
+}
+
 func GetPatreonPodcastFeed(feedURL string) (*PatreonPodcast, error) {
 	podcast := &PatreonPodcast{}
 
