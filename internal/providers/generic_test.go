@@ -26,6 +26,7 @@ func TestGenericUnmarshal(t *testing.T) {
 	test.AssertNotEmpty(t, "url", firstEp.GetURL())
 	test.AssertNotEmpty(t, "imageURL", firstEp.GetImageURL())
 	test.AssertNotEmpty(t, "getPublishedDate", firstEp.GetPublishedDate())
+	test.AssertNotEmpty(t, "GUID", firstEp.GetGUID())
 
 	// Test that the first episode's parsed published date is after Jan 01 2017
 
