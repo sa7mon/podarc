@@ -57,7 +57,7 @@ func TestPatreonStruct(t *testing.T) {
 		t.Error(err)
 	}
 
-	if expectedPubTime != actualPubTime {
+	if expectedPubTime.String() != actualPubTime.String() {
 		t.Error("Published time wrong. Expected: '" + expectedPubTime.String() + "', got: '" + actualPubTime.String() + "'")
 	}
 
