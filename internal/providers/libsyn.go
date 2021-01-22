@@ -94,6 +94,10 @@ func (l LibsynEpisode) ToString() string {
 		l.GetImageURL())
 }
 
+func (l LibsynEpisode) GetGUID() string {
+	return l.GUID
+}
+
 func GetLibsynProPodcastFeed(rssURL string) (*LibsynPodcast, error) {
 	podcast := &LibsynPodcast{}
 

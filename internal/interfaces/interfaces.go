@@ -18,4 +18,5 @@ type PodcastEpisode interface {
 	GetParsedPublishedDate() (time.Time, error)
 	GetImageURL() string
 	ToString() string
+	GetGUID() string
 }

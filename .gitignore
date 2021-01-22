@@ -2,6 +2,8 @@
 creds.json
 *.exe
 *.mp3
+*.wav
+*.m4a
 temp/
 .DS_Store
 dev_notes.txt
