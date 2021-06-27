@@ -62,6 +62,14 @@ func TestPatreonStruct(t *testing.T) {
 	}
 
 	test.AssertString(t, "toString()", "Title: My cool ep | Description: This is a nice ep! | Url: https://asdf.lol/myep.mp3 | PublishedDate: Tue, 03 Jan 2006 11:04:05 CST | ImageUrl: https://asdf.lol/cover.jpeg", patreonEp.ToString())
+}
 
+func TestGetBadPublishedDate(t *testing.T){
+	patreonEp := PatreonEpisode{Title: "My cool ep", PubDate: "!!!@@#$$%^^"}
+
+	_, err := patreonEp.GetParsedPublishedDate()
+	if err == nil {
+		t.Error("GetParsedPublishedDate() didn't throw an error when parsing an invalid time.Time")
+	}
 
 }
