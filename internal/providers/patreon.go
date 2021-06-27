@@ -133,7 +133,7 @@ func (p PatreonEpisode) GetGUID() string {
 func GetPatreonPodcastFeed(feedURL string) (*PatreonPodcast, error) {
 	podcast := &PatreonPodcast{}
 
-	if strings.Contains(feedURL, "?auth=") {
+	if !strings.Contains(feedURL, "?auth=") {
 		return podcast, errors.New("patreon URL is missing auth parameter")
 	}
 
