@@ -1,6 +1,7 @@
 package archiver
 
 import (
+	"errors"
 	"fmt"
 	"github.com/sa7mon/podarc/internal/interfaces"
 	"github.com/sa7mon/podarc/internal/providers"
@@ -90,9 +91,87 @@ func TestArchivePodcast(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	err = os.Remove("1KB.bin.tmp")
+	err = os.Remove("2006-01-02_my-test-episode.bin")
 	if err != nil {
 		fmt.Println("Couldn't delete test file: " + err.Error())
 	}
 
+	testPod2 := providers.GenericPodcast{}
+	testPod2.Channel.Title = "My Cool Podcast"
+	testPod2.Episodes = []interfaces.PodcastEpisode{}
+
+	testEpisode2 := providers.GenericEpisode{
+		Title: "My Test Episode",
+		PubDate: "Mon, 02 Jan 2006 15:04:05 -0700",
+	}
+	testEpisode2.Enclosure.URL = "https://fake.site.lol/episode1234.mp3"
+	testPod2.Episodes = append(testPod2.Episodes, testEpisode2)
+
+	err = ArchivePodcast(testPod2, "./", false, true, utils.Credentials{})
+	if err == nil {
+		t.Error(errors.New("404 podcast link didn't return an error"))
+	}
+	err = os.Remove("episode1234.mp3.tmp")
+	if err != nil {
+		fmt.Println("Couldn't delete test file: " + err.Error())
+	}
+}
+
+func TestArchiveStitcherPodcast(t *testing.T) {
+	testPod := providers.GenericPodcast{}
+	testPod.Channel.Title = "My Cool Stitcher Podcast"
+	testPod.Channel.Author = "Stitcher"
+	testPod.Episodes = []interfaces.PodcastEpisode{}
+
+	testEpisode := providers.GenericEpisode{
+		Title:   "My Test Episode",
+		PubDate: "Mon, 02 Jan 2006 15:04:05 -0700",
+	}
+	testEpisode.Enclosure.URL = "https://my.fake.site/testArchiveStitcherPodcast.mp3"
+	testEpisode2 := providers.GenericEpisode{
+		Title:   "My Test Episode2",
+		PubDate: "Mon, 02 Jan 2006 15:04:05 -0700",
+	}
+	testEpisode2.Enclosure.URL = "https://my.fake.site/testArchiveStitcherPodcast2.mp3"
+
+	testPod.Episodes = append(testPod.Episodes, testEpisode)
+	testPod.Episodes = append(testPod.Episodes, testEpisode2)
+
+	err := ArchivePodcast(testPod, "./", false, true, utils.Credentials{StitcherNewToken: "asdf123"})
+	if err == nil {
+		t.Error("No error returned when trying to archive a Stitcher podcast with bad creds")
+	}
+
+	testPod2 := providers.GenericPodcast{}
+	testPod2.Channel.Title = "My Cool Stitcher Podcast"
+	testPod2.Channel.Author = "ASDF"
+
+	ep2 := providers.GenericEpisode{}
+	ep2.Enclosure.URL = "{}[]_=__++!@#$%A^&*()()()"
+	testPod2.Episodes = append(testPod2.Episodes, ep2)
+
+	err = ArchivePodcast(testPod2, "./", false, true, utils.Credentials{})
+	if err == nil {
+		t.Error("Bad episode URL didn't return an error")
+	}
+
+}
+
+func TestQueue(t *testing.T) {
+	episode1 := providers.GenericEpisode{Title: "My Cool Episode"}
+	q := NewQueue([]interfaces.PodcastEpisode{episode1})
+	test.AssertEqual(t, q.String(), "[{ My Cool Episode          { } {   } { }  }]")
+
+	episode2 := providers.GenericEpisode{Title: "My Cool Episode2"}
+	episode3 := providers.GenericEpisode{Title: "My Cool Episode3"}
+	episode4 := providers.GenericEpisode{Title: "My Cool Episode3"}
+
+	q.Add(episode2)
+	q.Add(episode3)
+	test.AssertEqual(t, q.Length(), 3)
+
+	test.AssertString(t, "queueItem",  "Title: My Cool Episode | Description:  | Url:  | PublishedDate:  | ImageUrl: ", q.items[0].ToString())
+
+	q.Add(episode4)
+	test.AssertEqual(t, q.Length(), 4)
 }

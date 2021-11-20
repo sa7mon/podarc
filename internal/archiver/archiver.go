@@ -1,6 +1,11 @@
+/*
+	Much of the consumer-producer pattern code copied from: https://medium.com/hdac/producer-consumer-pattern-implementation-with-golang-6ac412cf941c
+*/
+
 package archiver
 
 import (
+	"errors"
 	"fmt"
 	"github.com/sa7mon/podarc/internal/id3"
 	"github.com/sa7mon/podarc/internal/interfaces"
@@ -11,16 +16,151 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 )
 
-var concurrentDownloads = 8
+
+/*
+	State to pass to each consumer
+	Only access after locking the sync.Mutex to ensure thread safety
+ */
+type ArchiveState struct {
+	archivedCount 	uint32
+	toArchiveCount 	uint32
+}
+
+type State struct {
+	mutex 				sync.Mutex
+	queue 				Queue
+	err 				error
+	archivedCount 		uint32
+	totalToArchiveCount uint32
+}
+
+/*
+	FIFO queue
+*/
+type Queue struct {
+	items []interfaces.PodcastEpisode
+}
+
+func (q Queue) String() string {
+	return fmt.Sprintf("%v", q.items)
+}
+
+/*
+	Constructor
+*/
+func NewQueue(initial []interfaces.PodcastEpisode) Queue {
+	return Queue{items: initial}
+}
+
+func (q *Queue) Add(item interfaces.PodcastEpisode) {
+	q.items = append(q.items, item)
+}
+
+func (q *Queue) Get() interfaces.PodcastEpisode {
+	if len(q.items) == 0 {
+		return nil
+	}
+	popped := q.items[0]  // Get top element
+	q.items = q.items[1:] // Remove top element
+	return popped
+}
+
+func (q *Queue) Length() int {
+	return len(q.items)
+}
+
+func Work(state *State, wg *sync.WaitGroup, workerID int, podcast interfaces.Podcast, destDirectory string,
+			renameFiles bool, creds utils.Credentials) {
+	for {
+		// Get work to do
+		state.mutex.Lock()
+		if state.err != nil {
+			// Error happened somewhere - kill this thread
+			state.mutex.Unlock()
+			wg.Done()
+			return
+		}
+		episode := state.queue.Get()
+		state.mutex.Unlock()
+		if episode == nil {
+			//fmt.Printf("[worker%v] No work to do. Exiting\n", workerID)
+			wg.Done()
+			return
+		}
+
+		fileURL := episode.GetURL()
+		fileName, err := GetFileNameFromEpisodeURL(episode)
+		if err != nil {
+			state.mutex.Lock()
+			state.err = err
+			state.mutex.Unlock()
+			wg.Done()
+			return
+		}
+		episodePath := path.Join(destDirectory, fileName)
+
+		headers := make(map[string]string, 1)
+		if podcast.GetPublisher() == "Stitcher" {
+			valid, reason := utils.IsStitcherTokenValid(creds.StitcherNewToken)
+			if !valid {
+				state.mutex.Lock()
+				state.err = errors.New("Bad Stitcher token: " + reason)
+				state.mutex.Unlock()
+				wg.Done()
+				return
+			}
+			headers["Authorization"] = "Bearer " + creds.StitcherNewToken
+		}
+		log.Printf("[%s] [archiver] Downloading episode '%s'...", podcast.GetTitle(), episode.GetTitle())
+		err = utils.DownloadFile(episodePath, fileURL, headers, false)
+		if err != nil {
+			state.mutex.Lock()
+			state.err = err
+			state.mutex.Unlock()
+			wg.Done()
+			return
+		}
+		// Write ID3 tags to file
+		err = WriteID3TagsToFile(episodePath, episode, podcast)
+		if err != nil {
+			state.mutex.Lock()
+			state.err = err
+			state.mutex.Unlock()
+			wg.Done()
+			return
+		}
+
+		if renameFiles {
+			err = os.Rename(episodePath, path.Join(destDirectory, GetEpisodeFileName(episodePath, episode)))
+			if err != nil {
+				state.mutex.Lock()
+				state.err = err
+				state.mutex.Unlock()
+				wg.Done()
+				return
+			}
+		}
+
+		state.mutex.Lock()
+		state.archivedCount++
+		log.Printf("[%s] [archiver] (%d/%d) archived episode: '%s'", podcast.GetTitle(), state.archivedCount,
+			state.totalToArchiveCount, episode.GetTitle())
+		state.mutex.Unlock()
+	}
+
+}
 
 func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteExisting bool, renameFiles bool,
 	creds utils.Credentials) error {
 	var episodesToArchive []interfaces.PodcastEpisode
 
+	log.Printf("[%s] [archiver] Found %d total episodes", podcast.GetTitle(), len(podcast.GetEpisodes()))
 	for _, episode := range podcast.GetEpisodes() {
 		if overwriteExisting {
 			episodesToArchive = append(episodesToArchive, episode)
@@ -41,66 +181,38 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 			}
 		}
 	}
-	log.Printf("[%s] [archiver] Found %d total episodes", podcast.GetTitle(), len(podcast.GetEpisodes()))
 	log.Printf("[%s] [archiver] Found %d episodes to archive", podcast.GetTitle(), len(episodesToArchive))
 
-	archivedEpisodes := 0
-	// For each episooutde not currently downloaded - download it.
-	var channel = make(chan int, concurrentDownloads)
+	// Setup producers/consumers
+	const nConsumers = 2
+	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	for _, episode := range episodesToArchive {
-		channel <- 1
-		go func(episodeToArchive interfaces.PodcastEpisode) error {
-			fileURL := episodeToArchive.GetURL()
-			fileName, err := GetFileNameFromEpisodeURL(episodeToArchive)
-			if err != nil {
-				return err
-			}
-			episodePath := path.Join(destDirectory, fileName)
+	// Instantiate a thread-safe state object
+	archiveState := &State{err: nil, queue: NewQueue(episodesToArchive),
+							totalToArchiveCount: uint32(len(episodesToArchive))}
 
-			headers := make(map[string]string, 1)
-			if podcast.GetPublisher() == "Stitcher" {
-				valid, reason := utils.IsStitcherTokenValid(creds.StitcherNewToken)
-				if !valid {
-					log.Fatal("Bad Stitcher token: " + reason)
-				}
-				headers["Authorization"] = "Bearer " + creds.StitcherNewToken
-			}
-			log.Printf("[%s] [archiver] Downloading episode '%s'...", podcast.GetTitle(), episodeToArchive.GetTitle())
-			err = utils.DownloadFile(episodePath, fileURL, headers, false)
-			if err != nil {
-				return err
-			}
-			log.Printf("[%s] [archiver] Downloaded episode '%s'", podcast.GetTitle(), episodeToArchive.GetTitle())
-			// Write ID3 tags to file
-			err = WriteID3TagsToFile(episodePath, episodeToArchive, podcast)
-			if err != nil {
-				return err
-			}
-			if renameFiles {
-				log.Printf("[%s] [archiver] Renaming file '%s'", podcast.GetTitle(), episodeToArchive.GetTitle())
-				err = os.Rename(episodePath, path.Join(destDirectory, GetEpisodeFileName(episodePath, episodeToArchive)))
-				if err != nil {
-					return err
-				}
-			}
-			archivedEpisodes++
-			fmt.Printf("\r")
-			log.Printf("[%s] [archiver] (%d/%d) archived episode: '%s'", podcast.GetTitle(), archivedEpisodes, len(episodesToArchive), episodeToArchive.GetTitle())
-			<-channel
-			return nil
-		}(episode)
+	wg := &sync.WaitGroup{}
+	wg.Add(nConsumers)
+	for i := 0; i < nConsumers; i++ {
+		go Work(archiveState, wg, i, podcast, destDirectory, renameFiles, creds)
 	}
-	return nil
+
+	wg.Wait()
+	return archiveState.err
 }
 
+/*
+	Contains a hacky workaround because the library doesn't support deleting ID3v1 tags.
+	We need to use ID3v2 because v1 has a 30-character limit on the title field (and likely others).
+	If the file has v1 tags, re-open forcing v2 tags which effectively erases all existing tags
+	that we don't set here.
+
+	TODO:
+		- Set date recorded
+		- Save podcast publisher to one of the tags
+		- Set cover image
+*/
 func WriteID3TagsToFile(filePath string, episode interfaces.PodcastEpisode, podcast interfaces.Podcast) error {
-	/*
-		Contains a hacky workaround because the library doesn't support deleting ID3v1 tags.
-		We need to use ID3v2 because v1 has a 30-character limit on the title field (and likely others).
-		If the file has v1 tags, re-open forcing v2 tags which effectively erases all existing tags
-		that we don't set here.
-	*/
 
 	file, err := id3.Open(filePath, false)
 	if err != nil {
@@ -160,6 +272,11 @@ func GetEpisodeFileName(episodeFile string, episode interfaces.PodcastEpisode) s
 	return newName
 }
 
+/*
+	Returns the file name from an episode URL.
+
+	Example: "https://my.site/podcast/episode1.mp3?asdf=1" -> "episode1.mp3"
+ */
 func GetFileNameFromEpisodeURL(episode interfaces.PodcastEpisode) (string, error) {
 	parsed, err := url.Parse(episode.GetURL())
 	if err != nil {
