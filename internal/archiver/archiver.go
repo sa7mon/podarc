@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-var concurrentDownloads = 2
+var concurrentDownloads = 8
 
 func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteExisting bool, renameFiles bool,
 	creds utils.Credentials) error {
@@ -45,8 +45,7 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 	log.Printf("[%s] [archiver] Found %d episodes to archive", podcast.GetTitle(), len(episodesToArchive))
 
 	archivedEpisodes := 0
-	// For each episode not currently downloaded - download it.
-
+	// For each episooutde not currently downloaded - download it.
 	var channel = make(chan int, concurrentDownloads)
 
 	for _, episode := range episodesToArchive {
@@ -72,17 +71,18 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 			if err != nil {
 				return err
 			}
+			log.Printf("[%s] [archiver] Downloaded episode '%s'", podcast.GetTitle(), episodeToArchive.GetTitle())
 			// Write ID3 tags to file
 			err = WriteID3TagsToFile(episodePath, episodeToArchive, podcast)
 			if err != nil {
 				return err
 			}
 			if renameFiles {
-				err = os.Rename(episodePath, GetEpisodeFileName(episodePath, episodeToArchive))
+				log.Printf("[%s] [archiver] Renaming file '%s'", podcast.GetTitle(), episodeToArchive.GetTitle())
+				err = os.Rename(episodePath, path.Join(destDirectory, GetEpisodeFileName(episodePath, episodeToArchive)))
 				if err != nil {
 					return err
 				}
-				return nil
 			}
 			archivedEpisodes++
 			fmt.Printf("\r")
