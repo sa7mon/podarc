@@ -146,6 +146,10 @@ func (e GenericEpisode) ToString() string {
 		e.GetImageURL())
 }
 
+func (e GenericEpisode) GetGUID() string {
+	return e.GUID.Text
+}
+
 func GetGenericPodcastFeed(url string) (*GenericPodcast, error) {
 	podcast := GenericPodcast{}
 

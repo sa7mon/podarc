@@ -103,6 +103,13 @@ func Work(state *State, wg *sync.WaitGroup, workerID int, podcast interfaces.Pod
 			wg.Done()
 			return
 		}
+
+		// Patreon allows identical file names across episodes.
+		// Use the GUID for the filename.
+		// TODO: Move this logic elsewhere or use GUID file names for all providers
+		if podcast.GetPublisher() == "Patreon" {
+			fileName = fmt.Sprintf("%v_%v", episode.GetGUID(), fileName)
+		}
 		episodePath := path.Join(destDirectory, fileName)
 
 		headers := make(map[string]string, 1)
