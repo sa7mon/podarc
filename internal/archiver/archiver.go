@@ -22,7 +22,6 @@ import (
 	"sync"
 )
 
-
 /*
 	State to pass to each consumer
 	Only access after locking the sync.Mutex to ensure thread safety
