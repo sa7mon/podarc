@@ -25,17 +25,17 @@ import (
 /*
 	State to pass to each consumer
 	Only access after locking the sync.Mutex to ensure thread safety
- */
+*/
 type ArchiveState struct {
-	archivedCount 	uint32
-	toArchiveCount 	uint32
+	archivedCount  uint32
+	toArchiveCount uint32
 }
 
 type State struct {
-	mutex 				sync.Mutex
-	queue 				Queue
-	err 				error
-	archivedCount 		uint32
+	mutex               sync.Mutex
+	queue               Queue
+	err                 error
+	archivedCount       uint32
 	totalToArchiveCount uint32
 }
 
@@ -75,7 +75,7 @@ func (q *Queue) Length() int {
 }
 
 func Work(state *State, wg *sync.WaitGroup, workerID int, podcast interfaces.Podcast, destDirectory string,
-			renameFiles bool, creds utils.Credentials) {
+	renameFiles bool, creds utils.Credentials) {
 	for {
 		// Get work to do
 		state.mutex.Lock()
@@ -163,14 +163,14 @@ func Work(state *State, wg *sync.WaitGroup, workerID int, podcast interfaces.Pod
 }
 
 func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteExisting bool, renameFiles bool,
-	creds utils.Credentials) error {
+	creds utils.Credentials, threads int) error {
 	var episodesToArchive []interfaces.PodcastEpisode
 
 	log.Printf("[%s] [archiver] Found %d total episodes", podcast.GetTitle(), len(podcast.GetEpisodes()))
 	for _, episode := range podcast.GetEpisodes() {
 		if overwriteExisting {
 			episodesToArchive = append(episodesToArchive, episode)
-		} else {   // if file does not exist in destDirectory, add to episodesToArchive
+		} else { // if file does not exist in destDirectory, add to episodesToArchive
 			var episodeFileName string
 			if renameFiles {
 				episodeFileName = GetEpisodeFileName(episode.GetURL(), episode) // Clean/normalize audio file name
@@ -190,12 +190,12 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 	log.Printf("[%s] [archiver] Found %d episodes to archive", podcast.GetTitle(), len(episodesToArchive))
 
 	// Setup producers/consumers
-	const nConsumers = 2
+	nConsumers := threads
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	// Instantiate a thread-safe state object
 	archiveState := &State{err: nil, queue: NewQueue(episodesToArchive),
-							totalToArchiveCount: uint32(len(episodesToArchive))}
+		totalToArchiveCount: uint32(len(episodesToArchive))}
 
 	wg := &sync.WaitGroup{}
 	wg.Add(nConsumers)
@@ -226,7 +226,7 @@ func WriteID3TagsToFile(filePath string, episode interfaces.PodcastEpisode, podc
 	}
 	//defer file.Close()
 
-	if file.Version()[0:1] == "1" {  // Re-open the file, forcing v2
+	if file.Version()[0:1] == "1" { // Re-open the file, forcing v2
 		log.Println("ID3v1 detected. Re-opening file and forcing ID3v2...")
 
 		file.Close()
@@ -262,8 +262,8 @@ func WriteID3TagsToFile(filePath string, episode interfaces.PodcastEpisode, podc
 }
 
 /**
-	Returns the name of the file this episode should be saved as
- */
+Returns the name of the file this episode should be saved as
+*/
 func GetEpisodeFileName(episodeFile string, episode interfaces.PodcastEpisode) string {
 	oldDate, _ := episode.GetParsedPublishedDate()
 	isoDate := oldDate.Format("2006-01-02")
@@ -282,7 +282,7 @@ func GetEpisodeFileName(episodeFile string, episode interfaces.PodcastEpisode) s
 	Returns the file name from an episode URL.
 
 	Example: "https://my.site/podcast/episode1.mp3?asdf=1" -> "episode1.mp3"
- */
+*/
 func GetFileNameFromEpisodeURL(episode interfaces.PodcastEpisode) (string, error) {
 	parsed, err := url.Parse(episode.GetURL())
 	if err != nil {

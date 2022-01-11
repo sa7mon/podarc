@@ -15,9 +15,10 @@ func main() {
 	destDirectory := flag.String("outputDir", "", "Directory to save the files into. (Required)")
 	overwrite := flag.Bool("overwrite", false, "Overwrite episodes already downloaded. Default: false")
 	renameFiles := flag.Bool("renameFiles", true, "Rename downloaded files to friendly names.")
+	threads := flag.Int("threads", 2, "Number of threads to use when downloading")
 	flag.Parse()
 
-	if *feedURL == "" || !utils.IsValidURL(*feedURL){
+	if *feedURL == "" || !utils.IsValidURL(*feedURL) {
 		fmt.Printf("Error - Invalid feedUrl: '%s'\n", *feedURL)
 		flag.PrintDefaults()
 		os.Exit(1)
@@ -25,6 +26,12 @@ func main() {
 
 	if *destDirectory == "" {
 		fmt.Printf("Error - Invalid outputDir: '%s'\n", *destDirectory)
+		flag.PrintDefaults()
+		os.Exit(1)
+	}
+
+	if *threads == 0 {
+		fmt.Println("Error - threads must be larger than 0")
 		flag.PrintDefaults()
 		os.Exit(1)
 	}
@@ -40,7 +47,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = archiver.ArchivePodcast(fetchedPodcast, *destDirectory, *overwrite, *renameFiles, credentials)
+	err = archiver.ArchivePodcast(fetchedPodcast, *destDirectory, *overwrite, *renameFiles, credentials, *threads)
 	if err != nil {
 		log.Println("Error: " + err.Error())
 	}
