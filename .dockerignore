@@ -1,0 +1,5 @@
+*.yml
+test/
+*.md
+*.mp3
+podcasts/
