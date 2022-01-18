@@ -7,6 +7,7 @@ package archiver
 import (
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/sa7mon/podarc/internal/id3"
 	"github.com/sa7mon/podarc/internal/interfaces"
 	"github.com/sa7mon/podarc/internal/utils"
@@ -20,6 +21,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"unicode"
 )
 
 /*
@@ -102,13 +104,17 @@ func Work(state *State, wg *sync.WaitGroup, workerID int, podcast interfaces.Pod
 			wg.Done()
 			return
 		}
+		// Generate a UUID and append a weird sanitized version of the episode name to the end
+		// this suffix is just for debugging purposes as the file will get immediately renamed after downloading
+		fileName = uuid.New().String() + SanitizeFileName(episode.GetTitle()) + filepath.Ext(fileName)
 
 		// Patreon allows identical file names across episodes.
 		// Use the GUID for the filename.
 		// TODO: Move this logic elsewhere or use GUID file names for all providers
-		if podcast.GetPublisher() == "Patreon" {
-			fileName = fmt.Sprintf("%v_%v", episode.GetGUID(), fileName)
-		}
+		//if podcast.GetPublisher() == "Patreon" {
+		//	fileName = fmt.Sprintf("%v_%v", episode.GetGUID(), fileName)
+		//}
+
 		episodePath := path.Join(destDirectory, fileName)
 
 		headers := make(map[string]string, 1)
@@ -164,6 +170,7 @@ func Work(state *State, wg *sync.WaitGroup, workerID int, podcast interfaces.Pod
 
 func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteExisting bool, renameFiles bool,
 	creds utils.Credentials) error {
+	var err error
 	var episodesToArchive []interfaces.PodcastEpisode
 
 	log.Printf("[%s] [archiver] Found %d total episodes", podcast.GetTitle(), len(podcast.GetEpisodes()))
@@ -175,11 +182,10 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 			if renameFiles {
 				episodeFileName = GetEpisodeFileName(episode.GetURL(), episode) // Clean/normalize audio file name
 			} else {
-				episode, err := GetFileNameFromEpisodeURL(episode) // Leave file name as it is in the URL
+				episodeFileName, err = GetFileNameFromEpisodeURL(episode) // Leave file name as it is in the URL
 				if err != nil {
 					return err
 				}
-				episodeFileName = episode
 			}
 			episodePath := path.Join(destDirectory, episodeFileName)
 			if _, err := os.Stat(episodePath); os.IsNotExist(err) {
@@ -292,4 +298,16 @@ func GetFileNameFromEpisodeURL(episode interfaces.PodcastEpisode) (string, error
 	// url.Path returns the path portion of the URL (without query parameters)
 	// path.Base() returns everything after the final slash
 	return path.Base(parsed.Path), nil
+}
+
+func SanitizeFileName(dirty string) string {
+	clean := ""
+	for _, char := range dirty {
+		if unicode.IsLetter(char) || unicode.IsNumber(char) {
+			clean = clean + string(char)
+		} else {
+			clean = clean + "_"
+		}
+	}
+	return clean
 }

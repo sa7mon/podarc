@@ -1,7 +1,7 @@
-github.com/djimenez/iconv-go v0.0.0-20160305225143-8960e66bd3da h1:0qwwqQCLOOXPl58ljnq3sTJR7yRuMolM02vjxDh4ZVE=
-github.com/djimenez/iconv-go v0.0.0-20160305225143-8960e66bd3da/go.mod h1:ns+zIWBBchgfRdxNgIJWn2x6U95LQchxeqiN5Cgdgts=
 github.com/dustin/go-humanize v1.0.0 h1:VSnTsYCnlFHaM2/igO1h6X3HA71jcobQuxemgkq4zYo=
 github.com/dustin/go-humanize v1.0.0/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=
+github.com/google/uuid v1.3.0 h1:t6JiXgmwXMjEs8VusXIJk2BXHsn+wx8BZdTaoZ5fu7I=
+github.com/google/uuid v1.3.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/stvp/slug v0.0.0-20150928221549-5ab8191bb1fe h1:4JRWkWgnObZN4ZqjytDBL3MWWbfYvaSDgsBahJj4/Ls=
 github.com/stvp/slug v0.0.0-20150928221549-5ab8191bb1fe/go.mod h1:zCy5WSy4DUGgDc9U3ChjHIKc1mbvVqJF3wzpBQAhkGA=
 golang.org/x/text v0.3.3 h1:cokOdA+Jmi5PJGXLlLllQSgYigAEfHXJAERHVMaCc2k=
