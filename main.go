@@ -60,18 +60,18 @@ func serve(podDir *string, baseUrl *string) {
 					fmt.Println(err)
 				}
 
-				w.WriteHeader(200)
 				w.Header().Set("Content-Type", "application/xml")
-				w.Write(bytes.Replace(feedFileBytes, []byte("{PODARC_BASE_URL}"), []byte(*baseUrl), -1))
+				w.WriteHeader(200)
+				w.Write(bytes.Replace(feedFileBytes, []byte("{PODARC_BASE_URL}"), []byte("http://"+*baseUrl+"/files/"+requestedFeed), -1))
 				return
 			}
 		}
 		w.WriteHeader(404)
-		w.Write([]byte("feed not found"))
+		w.Write([]byte("404 feed not found"))
 	})
 
-	fmt.Println("Server listening...")
-	log.Fatal(http.ListenAndServe(":8000", nil))
+	fmt.Println("Server listening on: " + *baseUrl)
+	log.Fatal(http.ListenAndServe(*baseUrl, nil))
 }
 
 func main() {
