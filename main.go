@@ -1,65 +1,124 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"github.com/sa7mon/podarc/internal/archiver"
 	"github.com/sa7mon/podarc/internal/providers"
 	"github.com/sa7mon/podarc/internal/utils"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
+	"path"
+	"strings"
 )
 
-func main2() {
-
-	//http.HandleFunc("/pod-save-america", func(w http.ResponseWriter, r *http.Request) {
-	//	feed, err := providers.GetGenericPodcastFeed("https://feeds.feedburner.com/pod-save-america")
-	//	if err != nil {
-	//		log.Println(err)
-	//	}
-	//	pf := feed.ToPodarcFile("https://example.com/pod-save-america")
-	//	w.Header().Set("Content-Type", "application/xml")
-	//	if err := pf.Podcast.Encode(w); err != nil {
-	//		http.Error(w, err.Error(), http.StatusInternalServerError)
-	//	}
-	//})
-	//log.Fatal(http.ListenAndServe(":8000", nil))
-
-	feed, err := providers.GetGenericPodcastFeed("https://feeds.feedburner.com/pod-save-america")
-	if err != nil {
-		log.Println(err)
-	}
-
-	//err = feed.SaveToFile("pod-save-america.xml")
-	err = feed.SaveToFile2("pod-save-america2.xml")
-	if err != nil {
-		log.Println(err)
+func FolderExists(dirPath string) bool {
+	info, err := os.Stat(dirPath)
+	if os.IsNotExist(err) { // Path does not exist
+		return false
+	} else {
+		if !info.IsDir() { // Path exists but it's a file
+			return false
+		}
+		return true
 	}
 }
 
+func FileExists(filePath string) bool {
+	info, err := os.Stat(filePath)
+	if os.IsNotExist(err) { // Path does not exist
+		return false
+	} else {
+		if info.IsDir() { // Path exists but it's a directory
+			return false
+		}
+		return true
+	}
+}
+
+func serve(podDir *string, baseUrl *string) {
+	fs := http.FileServer(http.Dir(*podDir))
+
+	http.Handle("/files/", http.StripPrefix("/files", fs))
+	http.HandleFunc("/feed/", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "GET" {
+			w.WriteHeader(405)
+			return
+		}
+
+		log.Println("GET " + r.URL.Path)
+		requestedFeed := strings.TrimLeft(r.URL.Path, "/feed/")
+
+		if FolderExists(path.Join(*podDir, requestedFeed)) {
+			feedFile := path.Join(*podDir, requestedFeed, "feed.xml")
+			if FileExists(feedFile) {
+				feedFileBytes, err := ioutil.ReadFile(feedFile)
+				if err != nil {
+					fmt.Println(err)
+				}
+
+				w.WriteHeader(200)
+				w.Header().Set("Content-Type", "application/xml")
+				w.Write(bytes.Replace(feedFileBytes, []byte("{PODARC_BASE_URL}"), []byte(*baseUrl), -1))
+				return
+			}
+		}
+		w.WriteHeader(404)
+		w.Write([]byte("feed not found"))
+	})
+
+	fmt.Println("Server listening...")
+	log.Fatal(http.ListenAndServe(":8000", nil))
+}
+
 func main() {
-	feedURL := flag.String("feedUrl", "", "URL of podcast feed to archive. (Required)")
-	destDirectory := flag.String("outputDir", "", "Directory to save the files into. (Required)")
-	overwrite := flag.Bool("overwrite", false, "Overwrite episodes already downloaded. Default: false")
-	renameFiles := flag.Bool("renameFiles", true, "Rename downloaded files to friendly names.")
-	threads := flag.Int("threads", 2, "Number of threads to use when downloading")
-	flag.Parse()
 
-	if *feedURL == "" || !utils.IsValidURL(*feedURL) {
-		fmt.Printf("Error - Invalid feedUrl: '%s'\n", *feedURL)
-		flag.PrintDefaults()
+	archiveCmd := flag.NewFlagSet("archive", flag.ExitOnError)
+
+	feedURL := archiveCmd.String("feedUrl", "", "URL of podcast feed to archive. (Required)")
+	destDirectory := archiveCmd.String("outputDir", "", "Directory to save the files into. (Required)")
+	overwrite := archiveCmd.Bool("overwrite", false, "Overwrite episodes already downloaded. Default: false")
+	renameFiles := archiveCmd.Bool("renameFiles", true, "Rename downloaded files to friendly names.")
+	threads := archiveCmd.Int("threads", 2, "Number of threads to use when downloading")
+
+	serveCmd := flag.NewFlagSet("serve", flag.ExitOnError)
+	podDir := serveCmd.String("dir", "", "Directory containing podcasts to serve.")
+	baseUrl := serveCmd.String("baseUrl", "http://localhost:8282", "Base URL at which to serve podcasts. Default: http://localhost:8282")
+
+	if len(os.Args) < 2 {
+		fmt.Println("expected 'archive' or 'serve' subcommand")
 		os.Exit(1)
 	}
 
-	if *destDirectory == "" {
-		fmt.Printf("Error - Invalid outputDir: '%s'\n", *destDirectory)
-		flag.PrintDefaults()
-		os.Exit(1)
-	}
+	switch os.Args[1] {
+	case "archive":
+		archiveCmd.Parse(os.Args[2:])
+		if *feedURL == "" || !utils.IsValidURL(*feedURL) {
+			fmt.Printf("Error - Invalid feedUrl: '%s'\n", *feedURL)
+			flag.PrintDefaults()
+			os.Exit(1)
+		}
 
-	if *threads == 0 {
-		fmt.Println("Error - threads must be larger than 0")
-		flag.PrintDefaults()
+		if *destDirectory == "" {
+			fmt.Printf("Error - Invalid outputDir: '%s'\n", *destDirectory)
+			flag.PrintDefaults()
+			os.Exit(1)
+		}
+
+		if *threads == 0 {
+			fmt.Println("Error - threads must be larger than 0")
+			flag.PrintDefaults()
+			os.Exit(1)
+		}
+
+	case "serve":
+		serveCmd.Parse(os.Args[2:])
+		serve(podDir, baseUrl)
+	default:
+		fmt.Println("expected 'archive' or 'serve' subcommand")
 		os.Exit(1)
 	}
 
