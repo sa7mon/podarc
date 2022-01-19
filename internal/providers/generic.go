@@ -4,8 +4,13 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"github.com/eduncan911/podcast"
+	"github.com/sa7mon/podarc/internal/archiver"
 	"github.com/sa7mon/podarc/internal/interfaces"
+	"io"
 	"net/http"
+	"os"
+	"strconv"
 	"time"
 )
 
@@ -55,10 +60,9 @@ type GenericPodcast struct {
 				AttrText string `xml:"text,attr"`
 			} `xml:"category"`
 		} `xml:"category"`
-		NewFeedURL string `xml:"new-feed-url"`
-		Items       []GenericEpisode `xml:"item"`
+		NewFeedURL string           `xml:"new-feed-url"`
+		Items      []GenericEpisode `xml:"item"`
 	} `xml:"channel"`
-	Episodes   []interfaces.PodcastEpisode
 }
 
 type GenericEpisode struct {
@@ -96,7 +100,12 @@ func (g GenericPodcast) NumEpisodes() int {
 }
 
 func (g GenericPodcast) GetEpisodes() []interfaces.PodcastEpisode {
-	return g.Episodes
+	// Can't return a slice of GenericEpisode. Instead we create a slice of the PodcastEpisode interface
+	episodes := make([]interfaces.PodcastEpisode, len(g.Channel.Items))
+	for a, _ := range g.Channel.Items {
+		episodes[a] = g.Channel.Items[a]
+	}
+	return episodes
 }
 
 func (g GenericPodcast) GetTitle() string {
@@ -141,13 +150,22 @@ func (e GenericEpisode) GetImageURL() string {
 }
 
 func (e GenericEpisode) ToString() string {
-	return fmt.Sprintf("Title: %s | Description: %s | Url: %s | PublishedDate: " +
+	return fmt.Sprintf("Title: %s | Description: %s | Url: %s | PublishedDate: "+
 		"%s | ImageUrl: %s", e.GetTitle(), e.GetDescription(), e.GetURL(), e.GetPublishedDate(),
 		e.GetImageURL())
 }
 
 func (e GenericEpisode) GetGUID() string {
 	return e.GUID.Text
+}
+
+func (e GenericEpisode) GetDuration() int64 {
+	i, err := strconv.ParseInt(e.Duration, 10, 64)
+	if err != nil {
+		fmt.Printf("Couldn't parse duration '%v' for episode '%v'", e.Duration, e.GetTitle())
+		return -1
+	}
+	return i
 }
 
 func GetGenericPodcastFeed(url string) (*GenericPodcast, error) {
@@ -174,11 +192,82 @@ func GetGenericPodcastFeed(url string) (*GenericPodcast, error) {
 		return &podcast, err
 	}
 
-	episodes := make([]interfaces.PodcastEpisode, len(podcast.Channel.Items))
+	episodes := make([]GenericEpisode, len(podcast.Channel.Items))
 	for i, elem := range podcast.Channel.Items {
 		episodes[i] = elem
 	}
-	podcast.Episodes = episodes
+	podcast.Channel.Items = episodes
 
 	return &podcast, nil
+}
+
+func (gp *GenericPodcast) SaveToFile(filename string) error {
+	// Starting with the scraped feed:
+	//     Replace enclosure URL
+	//     Update enclosure length
+
+	for i, ep := range gp.Channel.Items {
+		remoteFileName, err := archiver.GetFileNameFromEpisodeURL(ep)
+		if err != nil {
+			return err
+		}
+		localFileName := archiver.GetEpisodeFileName(remoteFileName, ep)
+		gp.Channel.Items[i].Enclosure.URL = fmt.Sprintf("{PODARC_BASE_URL}/%v", localFileName)
+	}
+
+	file, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	xmlWriter := io.Writer(file)
+
+	enc := xml.NewEncoder(xmlWriter)
+	enc.Indent(" ", " ")
+	if err := enc.Encode(gp); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (gp *GenericPodcast) SaveToFile2(filename string) error {
+	feed := podcast.New(gp.GetTitle(), "https://changeme",
+		gp.GetDescription(), nil, nil)
+
+	feed.AddSummary(gp.GetDescription())
+	feed.AddAuthor(gp.GetPublisher(), "")
+
+	fmt.Println(len(gp.Channel.Items))
+	for _, ep := range gp.Channel.Items {
+		i := podcast.Item{}
+		i.Title = ep.GetTitle()
+		i.Description = ep.GetDescription()
+		i.AddSummary(ep.GetDescription())
+		i.AddImage(ep.GetImageURL())
+		i.Link = "https://changeme"
+		i.GUID = ep.GetGUID()
+		//i.AddDuration(ep.GetDuration())
+		pubTime, err := ep.GetParsedPublishedDate()
+		if err == nil {
+			i.AddPubDate(&pubTime)
+		}
+		_, err = feed.AddItem(i)
+		if err != nil {
+			return err
+		}
+	}
+
+	file, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	xmlWriter := io.Writer(file)
+
+	enc := xml.NewEncoder(xmlWriter)
+	enc.Indent("  ", "    ")
+	if err := enc.Encode(feed); err != nil {
+		return err
+	}
+
+	return nil
 }

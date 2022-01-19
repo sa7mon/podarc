@@ -88,10 +88,10 @@ type latestEpisodesResponse struct {
 }
 
 type StitcherPodcast struct {
-	Name string
-	Feed string
+	Name            string
+	Feed            string
 	ShowDescription string
-	Episodes []interfaces.PodcastEpisode
+	Episodes        []interfaces.PodcastEpisode
 }
 
 type StitcherEpisode struct {
@@ -123,6 +123,10 @@ func (s StitcherPodcast) GetPublisher() string {
 	return "Stitcher"
 }
 
+func (s StitcherPodcast) SaveToFile(filename string) error {
+	return errors.New("SaveToFile not implemented yet for Stitcher")
+}
+
 func (e StitcherEpisode) GetTitle() string {
 	return e.Title
 }
@@ -152,7 +156,7 @@ func (e StitcherEpisode) GetGUID() string {
 }
 
 func (e StitcherEpisode) ToString() string {
-	return fmt.Sprintf("Title: %s | Description: %s | Url: %s | PublishedDate: " +
+	return fmt.Sprintf("Title: %s | Description: %s | Url: %s | PublishedDate: "+
 		"%s | ImageUrl: %s", e.GetTitle(), e.GetDescription(), e.GetURL(), e.GetPublishedDate(),
 		e.GetImageURL())
 }
@@ -169,7 +173,7 @@ func parseEpisodesFromResponse(response latestEpisodesResponse) []StitcherEpisod
 
 		// Stitcher Premium-only episodes have the AudioURLRestricted field set. Otherwise, use AudioURL
 		audioURLRestricted := fmt.Sprintf("%v", respEpisode.AudioURLRestricted)
-		if audioURLRestricted != "" && audioURLRestricted != "null"{
+		if audioURLRestricted != "" && audioURLRestricted != "null" {
 			newEpisode.URL = audioURLRestricted
 		} else {
 			newEpisode.URL = respEpisode.AudioURL

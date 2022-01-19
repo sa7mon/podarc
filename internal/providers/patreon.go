@@ -41,11 +41,11 @@ type PatreonPodcast struct {
 			Title string `xml:"title"`
 			Link  string `xml:"link"`
 		} `xml:"image"`
-		Block         string `xml:"block"`
-		Language      string `xml:"language"`
-		PubDate       string `xml:"pubDate"`
-		LastBuildDate string `xml:"lastBuildDate"`
-		Items          []PatreonEpisode `xml:"item"`
+		Block         string           `xml:"block"`
+		Language      string           `xml:"language"`
+		PubDate       string           `xml:"pubDate"`
+		LastBuildDate string           `xml:"lastBuildDate"`
+		Items         []PatreonEpisode `xml:"item"`
 	} `xml:"channel"`
 
 	Episodes []interfaces.PodcastEpisode
@@ -66,7 +66,7 @@ type PatreonEpisode struct {
 		Text        string `xml:",chardata"`
 		IsPermaLink string `xml:"isPermaLink,attr"`
 	} `xml:"guid"`
-	PubDate string `xml:"pubDate"`
+	PubDate  string `xml:"pubDate"`
 	ImageURL string // Patreon doesn't add an image for every episode. Return feed image
 }
 
@@ -100,7 +100,7 @@ func (p PatreonEpisode) GetImageURL() string {
 }
 
 func (p PatreonEpisode) ToString() string {
-	return fmt.Sprintf("Title: %s | Description: %s | Url: %s | PublishedDate: " +
+	return fmt.Sprintf("Title: %s | Description: %s | Url: %s | PublishedDate: "+
 		"%s | ImageUrl: %s", p.GetTitle(), p.GetDescription(), p.GetURL(), p.GetPublishedDate(),
 		p.GetImageURL())
 
@@ -128,6 +128,10 @@ func (p PatreonPodcast) GetPublisher() string {
 
 func (p PatreonEpisode) GetGUID() string {
 	return p.GUID.Text
+}
+
+func (p PatreonPodcast) SaveToFile(filename string) error {
+	return errors.New("SaveToFile not implemented yet for Patreon")
 }
 
 func GetPatreonPodcastFeed(feedURL string) (*PatreonPodcast, error) {

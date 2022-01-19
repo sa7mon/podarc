@@ -9,3 +9,5 @@ temp/
 dev_notes.txt
 *.tmp
 downloads/
+*.xml
+podcasts/

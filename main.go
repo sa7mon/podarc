@@ -10,6 +10,33 @@ import (
 	"os"
 )
 
+func main2() {
+
+	//http.HandleFunc("/pod-save-america", func(w http.ResponseWriter, r *http.Request) {
+	//	feed, err := providers.GetGenericPodcastFeed("https://feeds.feedburner.com/pod-save-america")
+	//	if err != nil {
+	//		log.Println(err)
+	//	}
+	//	pf := feed.ToPodarcFile("https://example.com/pod-save-america")
+	//	w.Header().Set("Content-Type", "application/xml")
+	//	if err := pf.Podcast.Encode(w); err != nil {
+	//		http.Error(w, err.Error(), http.StatusInternalServerError)
+	//	}
+	//})
+	//log.Fatal(http.ListenAndServe(":8000", nil))
+
+	feed, err := providers.GetGenericPodcastFeed("https://feeds.feedburner.com/pod-save-america")
+	if err != nil {
+		log.Println(err)
+	}
+
+	//err = feed.SaveToFile("pod-save-america.xml")
+	err = feed.SaveToFile2("pod-save-america2.xml")
+	if err != nil {
+		log.Println(err)
+	}
+}
+
 func main() {
 	feedURL := flag.String("feedUrl", "", "URL of podcast feed to archive. (Required)")
 	destDirectory := flag.String("outputDir", "", "Directory to save the files into. (Required)")
@@ -49,6 +76,6 @@ func main() {
 
 	err = archiver.ArchivePodcast(fetchedPodcast, *destDirectory, *overwrite, *renameFiles, credentials, *threads)
 	if err != nil {
-		log.Println("Error: " + err.Error())
+		log.Println("[main] Error: " + err.Error())
 	}
 }

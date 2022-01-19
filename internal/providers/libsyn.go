@@ -10,9 +10,9 @@ import (
 )
 
 type LibsynPodcast struct {
-	Title 			string 				`xml:"channel>title"`
-	ShowDescription string            	`xml:"channel>summary"` // itunes:summary
-	Episodes        []LibsynEpisode 	`xml:"channel>item"`
+	Title           string          `xml:"channel>title"`
+	ShowDescription string          `xml:"channel>summary"` // itunes:summary
+	Episodes        []LibsynEpisode `xml:"channel>item"`
 }
 
 type LibsynEpisode struct {
@@ -25,7 +25,7 @@ type LibsynEpisode struct {
 }
 
 type LibsynEnclosure struct {
-	Url 	string `xml:"url,attr"`
+	Url string `xml:"url,attr"`
 }
 
 type LibsynImage struct {
@@ -59,6 +59,10 @@ func (l LibsynPodcast) GetPublisher() string {
 	return "Libsyn"
 }
 
+func (l LibsynPodcast) SaveToFile(filename string) error {
+	return errors.New("SaveToFile not implemented yet for Libsyn")
+}
+
 func (l LibsynEpisode) GetTitle() string {
 	return l.Title
 }
@@ -89,7 +93,7 @@ func (l LibsynEpisode) GetImageURL() string {
 }
 
 func (l LibsynEpisode) ToString() string {
-	return fmt.Sprintf("Title: %s | Description: %s | Url: %s | PublishedDate: " +
+	return fmt.Sprintf("Title: %s | Description: %s | Url: %s | PublishedDate: "+
 		"%s | ImageUrl: %s", l.GetTitle(), l.GetDescription(), l.GetURL(), l.GetPublishedDate(),
 		l.GetImageURL())
 }
@@ -115,7 +119,6 @@ func GetLibsynProPodcastFeed(rssURL string) (*LibsynPodcast, error) {
 	if resp.StatusCode != 200 {
 		return podcast, errors.New("Bad status code while getting podcast - " + resp.Status)
 	}
-
 
 	xmlDecoder := xml.NewDecoder(resp.Body)
 	err = xmlDecoder.Decode(podcast)
