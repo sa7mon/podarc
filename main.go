@@ -39,7 +39,7 @@ func FileExists(filePath string) bool {
 	}
 }
 
-func serve(podDir *string, baseUrl *string) {
+func serve(podDir *string, baseUrl *string, bindPort uint16) {
 	fs := http.FileServer(http.Dir(*podDir))
 
 	http.Handle("/files/", http.StripPrefix("/files", fs))
@@ -62,7 +62,7 @@ func serve(podDir *string, baseUrl *string) {
 
 				w.Header().Set("Content-Type", "application/xml")
 				w.WriteHeader(200)
-				w.Write(bytes.Replace(feedFileBytes, []byte("{PODARC_BASE_URL}"), []byte("http://"+*baseUrl+"/files/"+requestedFeed), -1))
+				w.Write(bytes.Replace(feedFileBytes, []byte("{PODARC_BASE_URL}"), []byte(*baseUrl+"/files/"+strings.TrimPrefix(requestedFeed, "/")), -1))
 				return
 			}
 		}
@@ -70,8 +70,9 @@ func serve(podDir *string, baseUrl *string) {
 		w.Write([]byte("404 feed not found"))
 	})
 
-	fmt.Println("Server listening on: " + *baseUrl)
-	log.Fatal(http.ListenAndServe(*baseUrl, nil))
+	serveAddress := fmt.Sprintf("localhost:%v", bindPort)
+	fmt.Println("Server listening on: " + serveAddress)
+	log.Fatal(http.ListenAndServe(serveAddress, nil))
 }
 
 func main() {
@@ -87,6 +88,7 @@ func main() {
 	serveCmd := flag.NewFlagSet("serve", flag.ExitOnError)
 	podDir := serveCmd.String("dir", "", "Directory containing podcasts to serve.")
 	baseUrl := serveCmd.String("baseUrl", "http://localhost:8282", "Base URL at which to serve podcasts. Default: http://localhost:8282")
+	bindPort := serveCmd.Uint("bindPort", 8282, "Local port to bind to")
 
 	if len(os.Args) < 2 {
 		fmt.Println("expected 'archive' or 'serve' subcommand")
@@ -116,7 +118,12 @@ func main() {
 
 	case "serve":
 		serveCmd.Parse(os.Args[2:])
-		serve(podDir, baseUrl)
+		if *bindPort > 65535 {
+			fmt.Printf("Error - bind port must be within 0 - 65535\n")
+			flag.PrintDefaults()
+			os.Exit(1)
+		}
+		serve(podDir, baseUrl, uint16(*bindPort))
 	default:
 		fmt.Println("expected 'archive' or 'serve' subcommand")
 		os.Exit(1)
