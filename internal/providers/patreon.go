@@ -4,9 +4,12 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"github.com/sa7mon/podarc/internal/archiver"
 	"github.com/sa7mon/podarc/internal/interfaces"
 	"html"
+	"io"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 )
@@ -131,7 +134,33 @@ func (p PatreonEpisode) GetGUID() string {
 }
 
 func (p PatreonPodcast) SaveToFile(filename string) error {
-	return errors.New("SaveToFile not implemented yet for Patreon")
+	// Starting with the scraped feed:
+	//     Replace enclosure URL
+	//     Update enclosure length
+
+	for i, ep := range p.Channel.Items {
+		remoteFileName, err := archiver.GetFileNameFromEpisodeURL(ep)
+		if err != nil {
+			return err
+		}
+		localFileName := archiver.GetEpisodeFileName(remoteFileName, ep)
+		p.Channel.Items[i].Enclosure.URL = fmt.Sprintf("{PODARC_BASE_URL}/%v", localFileName)
+	}
+
+	file, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	xmlWriter := io.Writer(file)
+
+	enc := xml.NewEncoder(xmlWriter)
+	enc.Indent(" ", " ")
+	if err = enc.Encode(p); err != nil {
+		return err
+	}
+
+	return nil
+
 }
 
 func GetPatreonPodcastFeed(feedURL string) (*PatreonPodcast, error) {

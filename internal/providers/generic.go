@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -121,7 +122,7 @@ func (g GenericPodcast) GetPublisher() string {
 }
 
 func (e GenericEpisode) GetTitle() string {
-	return e.Title
+	return strings.TrimSpace(e.Title)
 }
 
 func (e GenericEpisode) GetDescription() string {
