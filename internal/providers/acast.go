@@ -15,16 +15,17 @@ import (
 )
 
 type AcastPodcast struct {
-	XMLName    xml.Name `xml:"rss"`
-	Text       string   `xml:",chardata"`
-	Version    string   `xml:"version,attr"`
-	Atom       string   `xml:"atom,attr"`
-	Googleplay string   `xml:"googleplay,attr"`
-	Itunes     string   `xml:"itunes,attr"`
-	Media      string   `xml:"media,attr"`
-	Podaccess  string   `xml:"podaccess,attr"`
-	Acast      string   `xml:"acast,attr"`
-	Channel    struct {
+	XMLName     xml.Name `xml:"rss"`
+	Text        string   `xml:",chardata"`
+	Version     string   `xml:"version,attr"`
+	Atom        string   `xml:"atom,attr"`
+	Googleplay  string   `xml:"googleplay,attr"`
+	Itunes      string   `xml:"itunes,attr"`
+	ItunesXmlns string   `xml:"xmlns:itunes,attr"`
+	Media       string   `xml:"media,attr"`
+	Podaccess   string   `xml:"podaccess,attr"`
+	Acast       string   `xml:"acast,attr"`
+	Channel     struct {
 		Text      string `xml:",chardata"`
 		Ttl       string `xml:"ttl"`
 		Generator string `xml:"generator"`
@@ -94,15 +95,16 @@ type AcastPodcast struct {
 }
 
 type AcastEpisode struct {
-	Text        string `xml:",chardata"`
-	Locked      string `xml:"locked,attr"`
-	Ads         string `xml:"ads,attr"`
-	Spons       string `xml:"spons,attr"`
-	AttrPremium string `xml:"premium,attr"`
-	Title       string `xml:"title"`
-	PubDate     string `xml:"pubDate"`
-	Duration    string `xml:"duration"`
-	Enclosure   struct {
+	Text           string `xml:",chardata"`
+	Locked         string `xml:"locked,attr"`
+	Ads            string `xml:"ads,attr"`
+	Spons          string `xml:"spons,attr"`
+	AttrPremium    string `xml:"premium,attr"`
+	Title          string `xml:"title"`
+	PubDate        string `xml:"pubDate"`
+	Duration       string `xml:"duration"`
+	ItunesDuration string `xml:"itunes:duration,omitempty"`
+	Enclosure      struct {
 		Text   string `xml:",chardata"`
 		URL    string `xml:"url,attr"`
 		Length string `xml:"length,attr"`
@@ -230,8 +232,11 @@ func GetAcastPodcastFeed(url string) (*AcastPodcast, error) {
 		return &podcast, err
 	}
 
+	podcast.ItunesXmlns = "http://www.itunes.com/dtds/podcast-1.0.dtd"
+
 	episodes := make([]AcastEpisode, len(podcast.Channel.Items))
 	for i, elem := range podcast.Channel.Items {
+		elem.ItunesDuration = elem.Duration // Manually set the <itunes:duration> tag
 		episodes[i] = elem
 	}
 	podcast.Channel.Items = episodes

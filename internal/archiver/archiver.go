@@ -226,7 +226,7 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 	}
 
 	wg.Wait()
-	feedFile := path.Join(destDirectory, SanitizeFileName(podcast.GetTitle())+".xml")
+	feedFile := path.Join(destDirectory, "feed.xml")
 	err := podcast.SaveToFile(feedFile)
 	if err != nil {
 		return errors.New("[archiver] error saving podcast to file: " + err.Error())

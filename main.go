@@ -62,7 +62,7 @@ func serve(podDir *string, baseUrl *string, bindPort uint16) {
 
 				w.Header().Set("Content-Type", "application/xml")
 				w.WriteHeader(200)
-				w.Write(bytes.Replace(feedFileBytes, []byte("{PODARC_BASE_URL}"), []byte(*baseUrl+"/files/"+strings.TrimPrefix(requestedFeed, "/")), -1))
+				w.Write(bytes.Replace(feedFileBytes, []byte("{PODARC_BASE_URL}"), []byte(*baseUrl+"/files/"+requestedFeed), -1))
 				return
 			}
 		}
