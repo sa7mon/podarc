@@ -5,12 +5,16 @@
 package archiver
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/sa7mon/podarc/internal/id3"
 	"github.com/sa7mon/podarc/internal/interfaces"
+	"github.com/sa7mon/podarc/internal/providers"
 	"github.com/sa7mon/podarc/internal/utils"
 	"github.com/stvp/slug"
+	spotifyauth "github.com/zmb3/spotify/v2/auth"
+	"golang.org/x/oauth2/clientcredentials"
 	"log"
 	"net/url"
 	"os"
@@ -94,6 +98,19 @@ func Work(state *State, wg *sync.WaitGroup, workerID int, podcast interfaces.Pod
 		}
 
 		fileURL := episode.GetURL()
+		if podcast.GetPublisher() == "Spotify" {
+			// Token is used to fetch individual episode URLs
+			ctx := context.Background()
+			config := &clientcredentials.Config{
+				ClientID:     os.Getenv("SPOTIFY_ID"),
+				ClientSecret: os.Getenv("SPOTIFY_SECRET"),
+				TokenURL:     spotifyauth.TokenURL,
+			}
+			apiToken, err := config.Token(ctx)
+
+			providers.GetSpotifyFileURL(episode, apiToken)
+		}
+
 		fileName, err := GetFileNameFromEpisodeURL(episode)
 		if err != nil {
 			state.mutex.Lock()
@@ -122,6 +139,8 @@ func Work(state *State, wg *sync.WaitGroup, workerID int, podcast interfaces.Pod
 				return
 			}
 			headers["Authorization"] = "Bearer " + creds.StitcherNewToken
+		} else if podcast.GetPublisher() == "Spotify" {
+
 		}
 		log.Printf("[%s] [archiver] Downloading episode '%s'...", podcast.GetTitle(), episode.GetTitle())
 		err = utils.DownloadFile(episodePath, fileURL, headers, false)
