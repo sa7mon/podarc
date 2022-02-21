@@ -45,7 +45,7 @@ func TestGetEpisodeFileName(t *testing.T) {
 
 func TestWriteID3TagsToFile(t *testing.T) {
 	// Test setup
-	err := utils.DownloadFile("test_id3_tagging.bin", "https://fastest.fish/lib/downloads/1KB.bin", nil,false)
+	err := utils.DownloadFile("test_id3_tagging.bin", "https://fastest.fish/lib/downloads/1KB.bin", nil, false)
 	if err != nil {
 		t.Error(err)
 	}
@@ -54,7 +54,7 @@ func TestWriteID3TagsToFile(t *testing.T) {
 	testPod := providers.GenericPodcast{}
 	testPod.Channel.Title = "My Cool Podcast"
 	testEpisode := providers.GenericEpisode{
-		Title: "My Test Episode",
+		Title:   "My Test Episode",
 		PubDate: "Mon, 02 Jan 2006 15:04:05 -0700",
 	}
 
@@ -81,13 +81,13 @@ func TestArchivePodcast(t *testing.T) {
 	testPod.Episodes = []interfaces.PodcastEpisode{}
 
 	testEpisode := providers.GenericEpisode{
-		Title: "My Test Episode",
+		Title:   "My Test Episode",
 		PubDate: "Mon, 02 Jan 2006 15:04:05 -0700",
 	}
 	testEpisode.Enclosure.URL = "https://fastest.fish/lib/downloads/1KB.bin"
 	testPod.Episodes = append(testPod.Episodes, testEpisode)
 
-	err := ArchivePodcast(testPod, "./", false, true, utils.Credentials{})
+	err := ArchivePodcast(testPod, "./", false, true, utils.Credentials{}, 1)
 	if err != nil {
 		t.Error(err)
 	}
@@ -101,13 +101,13 @@ func TestArchivePodcast(t *testing.T) {
 	testPod2.Episodes = []interfaces.PodcastEpisode{}
 
 	testEpisode2 := providers.GenericEpisode{
-		Title: "My Test Episode",
+		Title:   "My Test Episode",
 		PubDate: "Mon, 02 Jan 2006 15:04:05 -0700",
 	}
 	testEpisode2.Enclosure.URL = "https://fake.site.lol/episode1234.mp3"
 	testPod2.Episodes = append(testPod2.Episodes, testEpisode2)
 
-	err = ArchivePodcast(testPod2, "./", false, true, utils.Credentials{})
+	err = ArchivePodcast(testPod2, "./", false, true, utils.Credentials{}, 1)
 	if err == nil {
 		t.Error(errors.New("404 podcast link didn't return an error"))
 	}
@@ -137,7 +137,7 @@ func TestArchiveStitcherPodcast(t *testing.T) {
 	testPod.Episodes = append(testPod.Episodes, testEpisode)
 	testPod.Episodes = append(testPod.Episodes, testEpisode2)
 
-	err := ArchivePodcast(testPod, "./", false, true, utils.Credentials{StitcherNewToken: "asdf123"})
+	err := ArchivePodcast(testPod, "./", false, true, utils.Credentials{StitcherNewToken: "asdf123"}, 1)
 	if err == nil {
 		t.Error("No error returned when trying to archive a Stitcher podcast with bad creds")
 	}
@@ -150,7 +150,7 @@ func TestArchiveStitcherPodcast(t *testing.T) {
 	ep2.Enclosure.URL = "{}[]_=__++!@#$%A^&*()()()"
 	testPod2.Episodes = append(testPod2.Episodes, ep2)
 
-	err = ArchivePodcast(testPod2, "./", false, true, utils.Credentials{})
+	err = ArchivePodcast(testPod2, "./", false, true, utils.Credentials{}, 1)
 	if err == nil {
 		t.Error("Bad episode URL didn't return an error")
 	}
@@ -170,7 +170,7 @@ func TestQueue(t *testing.T) {
 	q.Add(episode3)
 	test.AssertEqual(t, q.Length(), 3)
 
-	test.AssertString(t, "queueItem",  "Title: My Cool Episode | Description:  | Url:  | PublishedDate:  | ImageUrl: ", q.items[0].ToString())
+	test.AssertString(t, "queueItem", "Title: My Cool Episode | Description:  | Url:  | PublishedDate:  | ImageUrl: ", q.items[0].ToString())
 
 	q.Add(episode4)
 	test.AssertEqual(t, q.Length(), 4)
