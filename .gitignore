@@ -9,3 +9,8 @@ temp/
 dev_notes.txt
 *.tmp
 downloads/
+podcasts
+*.py
+data/
+venv3
+credentials.json
