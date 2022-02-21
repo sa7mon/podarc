@@ -10,10 +10,12 @@ func FetchPodcastFromURL(feedURL string, creds utils.Credentials) (interfaces.Po
 	libsynR := regexp.MustCompile(`\S+\.libsynpro.com/rss`)
 	stitcherR := regexp.MustCompile(`https://www\.stitcher\.com/show/(?P<slug>[a-zA-Z0-9-]+)`)
 	patreonR := regexp.MustCompile(`http(?:s)*://www\.patreon\.com/rss/.+`)
+	spotifyR := regexp.MustCompile(`https://open\.spotify\.com/show/(?P<showID>\S{5,35})`)
 
 	libSynMatches := libsynR.MatchString(feedURL)
 	stitcherMatches := stitcherR.FindStringSubmatch(feedURL)
 	patreonMatches := patreonR.MatchString(feedURL)
+	spotifyMatches := spotifyR.FindStringSubmatch(feedURL)
 
 	if len(stitcherMatches) > 0 {
 		return GetStitcherPodcastFeed(stitcherMatches[1], creds.StitcherNewToken)
@@ -23,6 +25,9 @@ func FetchPodcastFromURL(feedURL string, creds utils.Credentials) (interfaces.Po
 	} else if patreonMatches {
 		patreonPod, err := GetPatreonPodcastFeed(feedURL)
 		return patreonPod, err
+	} else if len(spotifyMatches) > 0 {
+		spotifyFeed, err := GetSpotifyPodcastFeed(spotifyMatches[1])
+		return spotifyFeed, err
 	} else {
 		genericPod, err := GetGenericPodcastFeed(feedURL)
 		return genericPod, err
