@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+// GenericPodcast represents a generic, reusable podcast feed.
+// iTunes required tags: Title, Description, itunes:Image, language, itunes:category, itunes:explicit
 type GenericPodcast struct {
 	XMLName    xml.Name `xml:"rss"`
 	Text       string   `xml:",chardata"`
@@ -42,6 +44,7 @@ type GenericPodcast struct {
 		Author   string `xml:"author"`
 		Summary  string `xml:"summary"`
 		Encoded  string `xml:"encoded"`
+		Explicit bool   `xml:"explicit"`
 		Owner    struct {
 			Text  string `xml:",chardata"`
 			Name  string `xml:"name"`
@@ -55,10 +58,10 @@ type GenericPodcast struct {
 				AttrText string `xml:"text,attr"`
 			} `xml:"category"`
 		} `xml:"category"`
-		NewFeedURL string `xml:"new-feed-url"`
-		Items       []GenericEpisode `xml:"item"`
+		NewFeedURL string                      `xml:"new-feed-url"`
+		Items      []interfaces.PodcastEpisode `xml:"item"`
 	} `xml:"channel"`
-	Episodes   []interfaces.PodcastEpisode
+	Episodes []interfaces.PodcastEpisode
 }
 
 type GenericEpisode struct {
@@ -141,7 +144,7 @@ func (e GenericEpisode) GetImageURL() string {
 }
 
 func (e GenericEpisode) ToString() string {
-	return fmt.Sprintf("Title: %s | Description: %s | Url: %s | PublishedDate: " +
+	return fmt.Sprintf("Title: %s | Description: %s | Url: %s | PublishedDate: "+
 		"%s | ImageUrl: %s", e.GetTitle(), e.GetDescription(), e.GetURL(), e.GetPublishedDate(),
 		e.GetImageURL())
 }
