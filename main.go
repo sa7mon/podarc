@@ -62,7 +62,7 @@ func serve(podDir *string, baseUrl *string, bindPort uint16) {
 
 				w.Header().Set("Content-Type", "application/xml")
 				w.WriteHeader(200)
-				w.Write(bytes.Replace(feedFileBytes, []byte("{PODARC_BASE_URL}"), []byte(*baseUrl+"/files/"+requestedFeed), -1))
+				w.Write(bytes.Replace(feedFileBytes, []byte("{PODARC_BASE_URL}"), []byte(path.Join(*baseUrl, "files", requestedFeed)), -1))
 				return
 			}
 		}
@@ -78,7 +78,6 @@ func serve(podDir *string, baseUrl *string, bindPort uint16) {
 func main() {
 
 	archiveCmd := flag.NewFlagSet("archive", flag.ExitOnError)
-
 	feedURL := archiveCmd.String("feedUrl", "", "URL of podcast feed to archive. (Required)")
 	destDirectory := archiveCmd.String("outputDir", "", "Directory to save the files into. (Required)")
 	overwrite := archiveCmd.Bool("overwrite", false, "Overwrite episodes already downloaded. Default: false")
@@ -86,12 +85,18 @@ func main() {
 	threads := archiveCmd.Int("threads", 2, "Number of threads to use when downloading")
 
 	serveCmd := flag.NewFlagSet("serve", flag.ExitOnError)
-	podDir := serveCmd.String("dir", "", "Directory containing podcasts to serve.")
-	baseUrl := serveCmd.String("baseUrl", "http://localhost:8282", "Base URL at which to serve podcasts. Default: http://localhost:8282")
+	podDir := serveCmd.String("dir", "./podcasts/", "Directory containing podcasts to serve")
+	baseUrl := serveCmd.String("baseUrl", "http://localhost:8282", "Base URL at which to serve podcasts")
 	bindPort := serveCmd.Uint("bindPort", 8282, "Local port to bind to")
+
+	flag.Parse()
 
 	if len(os.Args) < 2 {
 		fmt.Println("expected 'archive' or 'serve' subcommand")
+		fmt.Println("archive")
+		archiveCmd.PrintDefaults()
+		fmt.Println("\nserve")
+		serveCmd.PrintDefaults()
 		os.Exit(1)
 	}
 
@@ -100,19 +105,19 @@ func main() {
 		archiveCmd.Parse(os.Args[2:])
 		if *feedURL == "" || !utils.IsValidURL(*feedURL) {
 			fmt.Printf("Error - Invalid feedUrl: '%s'\n", *feedURL)
-			flag.PrintDefaults()
+			archiveCmd.PrintDefaults()
 			os.Exit(1)
 		}
 
 		if *destDirectory == "" {
 			fmt.Printf("Error - Invalid outputDir: '%s'\n", *destDirectory)
-			flag.PrintDefaults()
+			archiveCmd.PrintDefaults()
 			os.Exit(1)
 		}
 
 		if *threads == 0 {
 			fmt.Println("Error - threads must be larger than 0")
-			flag.PrintDefaults()
+			archiveCmd.PrintDefaults()
 			os.Exit(1)
 		}
 
@@ -120,12 +125,13 @@ func main() {
 		serveCmd.Parse(os.Args[2:])
 		if *bindPort > 65535 {
 			fmt.Printf("Error - bind port must be within 0 - 65535\n")
-			flag.PrintDefaults()
+			serveCmd.PrintDefaults()
 			os.Exit(1)
 		}
 		serve(podDir, baseUrl, uint16(*bindPort))
 	default:
 		fmt.Println("expected 'archive' or 'serve' subcommand")
+		serveCmd.PrintDefaults()
 		os.Exit(1)
 	}
 
