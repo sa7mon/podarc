@@ -258,16 +258,11 @@ func (gp *AcastPodcast) SaveToFile(filename string) error {
 		gp.Channel.Items[i].Enclosure.URL = fmt.Sprintf("{PODARC_BASE_URL}/%v", localFileName)
 	}
 
-	//w = MyWriter{File:f}
-	//encoder := xml.NewEncoder(w)
-	//_ = encoder.Encode(...)
-
 	file, err := os.Create(filename)
 	if err != nil {
 		return err
 	}
 	xmlWriter := XmlWriter{File: file}
-	//xmlWriter := io.Writer(file)
 
 	enc := xml.NewEncoder(xmlWriter)
 	enc.Indent(" ", " ")

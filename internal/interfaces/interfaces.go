@@ -10,7 +10,6 @@ type Podcast interface {
 	GetTitle() string
 	GetDescription() string
 	GetPublisher() string
-	//ToPodarcFile() *archiver.PodarcFile
 	SaveToFile(string) error
 }
 
