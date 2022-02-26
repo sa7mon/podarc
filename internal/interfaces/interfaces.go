@@ -1,6 +1,8 @@
 package interfaces
 
-import "time"
+import (
+	"time"
+)
 
 type Podcast interface {
 	NumEpisodes() int
@@ -8,6 +10,7 @@ type Podcast interface {
 	GetTitle() string
 	GetDescription() string
 	GetPublisher() string
+	SaveToFile(string) error
 }
 
 type PodcastEpisode interface {

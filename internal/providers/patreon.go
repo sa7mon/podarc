@@ -4,9 +4,12 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"github.com/sa7mon/podarc/internal/archiver"
 	"github.com/sa7mon/podarc/internal/interfaces"
 	"html"
+	"io"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 )
@@ -41,11 +44,11 @@ type PatreonPodcast struct {
 			Title string `xml:"title"`
 			Link  string `xml:"link"`
 		} `xml:"image"`
-		Block         string `xml:"block"`
-		Language      string `xml:"language"`
-		PubDate       string `xml:"pubDate"`
-		LastBuildDate string `xml:"lastBuildDate"`
-		Items          []PatreonEpisode `xml:"item"`
+		Block         string           `xml:"block"`
+		Language      string           `xml:"language"`
+		PubDate       string           `xml:"pubDate"`
+		LastBuildDate string           `xml:"lastBuildDate"`
+		Items         []PatreonEpisode `xml:"item"`
 	} `xml:"channel"`
 
 	Episodes []interfaces.PodcastEpisode
@@ -66,7 +69,7 @@ type PatreonEpisode struct {
 		Text        string `xml:",chardata"`
 		IsPermaLink string `xml:"isPermaLink,attr"`
 	} `xml:"guid"`
-	PubDate string `xml:"pubDate"`
+	PubDate  string `xml:"pubDate"`
 	ImageURL string // Patreon doesn't add an image for every episode. Return feed image
 }
 
@@ -100,7 +103,7 @@ func (p PatreonEpisode) GetImageURL() string {
 }
 
 func (p PatreonEpisode) ToString() string {
-	return fmt.Sprintf("Title: %s | Description: %s | Url: %s | PublishedDate: " +
+	return fmt.Sprintf("Title: %s | Description: %s | Url: %s | PublishedDate: "+
 		"%s | ImageUrl: %s", p.GetTitle(), p.GetDescription(), p.GetURL(), p.GetPublishedDate(),
 		p.GetImageURL())
 
@@ -128,6 +131,36 @@ func (p PatreonPodcast) GetPublisher() string {
 
 func (p PatreonEpisode) GetGUID() string {
 	return p.GUID.Text
+}
+
+func (p PatreonPodcast) SaveToFile(filename string) error {
+	// Starting with the scraped feed:
+	//     Replace enclosure URL
+	//     Update enclosure length
+
+	for i, ep := range p.Channel.Items {
+		remoteFileName, err := archiver.GetFileNameFromEpisodeURL(ep)
+		if err != nil {
+			return err
+		}
+		localFileName := archiver.GetEpisodeFileName(remoteFileName, ep)
+		p.Channel.Items[i].Enclosure.URL = fmt.Sprintf("{PODARC_BASE_URL}/%v", localFileName)
+	}
+
+	file, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	xmlWriter := io.Writer(file)
+
+	enc := xml.NewEncoder(xmlWriter)
+	enc.Indent(" ", " ")
+	if err = enc.Encode(p); err != nil {
+		return err
+	}
+
+	return nil
+
 }
 
 func GetPatreonPodcastFeed(feedURL string) (*PatreonPodcast, error) {

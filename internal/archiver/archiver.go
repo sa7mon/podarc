@@ -7,6 +7,7 @@ package archiver
 import (
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/sa7mon/podarc/internal/id3"
 	"github.com/sa7mon/podarc/internal/interfaces"
 	"github.com/sa7mon/podarc/internal/utils"
@@ -20,6 +21,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"unicode"
 )
 
 /*
@@ -93,6 +95,18 @@ func Work(state *State, wg *sync.WaitGroup, workerID int, podcast interfaces.Pod
 			return
 		}
 
+		// If an episode has no download link (like a feed item that's just a note to the listener), skip it
+		if strings.TrimSpace(episode.GetURL()) == "" {
+			log.Printf("[%s] [archiver] Episode '%v' has no download link. Skipping...", podcast.GetTitle(),
+				episode.GetTitle())
+			state.mutex.Lock()
+			state.archivedCount++
+			log.Printf("[%s] [archiver] (%d/%d) archived episode: '%s'", podcast.GetTitle(), state.archivedCount,
+				state.totalToArchiveCount, episode.GetTitle())
+			state.mutex.Unlock()
+			continue
+		}
+
 		fileURL := episode.GetURL()
 		fileName, err := GetFileNameFromEpisodeURL(episode)
 		if err != nil {
@@ -103,12 +117,10 @@ func Work(state *State, wg *sync.WaitGroup, workerID int, podcast interfaces.Pod
 			return
 		}
 
-		// Patreon allows identical file names across episodes.
-		// Use the GUID for the filename.
-		// TODO: Move this logic elsewhere or use GUID file names for all providers
-		if podcast.GetPublisher() == "Patreon" {
-			fileName = fmt.Sprintf("%v_%v", episode.GetGUID(), fileName)
-		}
+		// Generate a UUID and append a weird sanitized version of the episode name to the end
+		// this suffix is just for debugging purposes as the file will get immediately renamed after downloading
+		fileName = uuid.New().String() + SanitizeFileName(episode.GetTitle()) + filepath.Ext(fileName)
+
 		episodePath := path.Join(destDirectory, fileName)
 
 		headers := make(map[string]string, 1)
@@ -168,6 +180,10 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 
 	log.Printf("[%s] [archiver] Found %d total episodes", podcast.GetTitle(), len(podcast.GetEpisodes()))
 	for _, episode := range podcast.GetEpisodes() {
+		if strings.TrimSpace(episode.GetURL()) == "" {
+			log.Printf("[%s] [archiver] Episode '%v' has no download link. Ignoring episode", podcast.GetTitle(), episode.GetTitle())
+			continue
+		}
 		if overwriteExisting {
 			episodesToArchive = append(episodesToArchive, episode)
 		} else { // if file does not exist in destDirectory, add to episodesToArchive
@@ -204,6 +220,11 @@ func ArchivePodcast(podcast interfaces.Podcast, destDirectory string, overwriteE
 	}
 
 	wg.Wait()
+	feedFile := path.Join(destDirectory, "feed.xml")
+	err := podcast.SaveToFile(feedFile)
+	if err != nil {
+		return errors.New("[archiver] error saving podcast to file: " + err.Error())
+	}
 	return archiveState.err
 }
 
@@ -292,4 +313,16 @@ func GetFileNameFromEpisodeURL(episode interfaces.PodcastEpisode) (string, error
 	// url.Path returns the path portion of the URL (without query parameters)
 	// path.Base() returns everything after the final slash
 	return path.Base(parsed.Path), nil
+}
+
+func SanitizeFileName(dirty string) string {
+	clean := ""
+	for _, char := range dirty {
+		if unicode.IsLetter(char) || unicode.IsNumber(char) {
+			clean = clean + string(char)
+		} else {
+			clean = clean + "_"
+		}
+	}
+	return clean
 }
